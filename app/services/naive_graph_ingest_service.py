@@ -13,7 +13,7 @@ class NaiveGraphIngestService:
         meta = self.repo.save_article(req.title, req.text)
         article_id = meta["article_id"]
         title = meta["title"]
-        print(meta, article_id, title)
+        print(meta)
 
         kb_info = KnowledgeBaseService().update_from_article(
             article_id=article_id,
@@ -23,7 +23,8 @@ class NaiveGraphIngestService:
 
         return {
             **meta,
-            "kb_file": kb_info["kb_file"],
+            "entities_file": kb_info["entities_file"],
+            "relations_file": kb_info["relations_file"],
             "kb_is_new": kb_info["is_new"],
             "message": "Article saved and knowledge base updated.",
         }

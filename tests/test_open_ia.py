@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 
-# load_dotenv()
+load_dotenv()
 
 print("WORKDIR =", os.getcwd())
 print("LOADED KEY:", os.getenv("OPENAI_API_KEY"))

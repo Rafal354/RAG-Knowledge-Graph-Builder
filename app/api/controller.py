@@ -1,6 +1,7 @@
 import logging
 import os
 
+from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException
 
 from app.core.config import settings
@@ -14,6 +15,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 router = APIRouter()
 builder: Neo4jKBBuilder | None = None
+load_dotenv()
 
 
 def startup_event():

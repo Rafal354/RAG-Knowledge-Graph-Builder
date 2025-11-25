@@ -1,47 +1,53 @@
+import os
 from pathlib import Path
 from textwrap import dedent
-from typing import Optional
 
 from langchain.chat_models import init_chat_model
 
+BASE_DIR = Path(__file__).resolve().parent.parent.parent / "database"
+entities_file = BASE_DIR / "entities.txt"
+relations_file = BASE_DIR / "relations.txt"
 
-class KnowledgeExtractionService:
-    """
-    Service responsible for:
-    - building the extraction prompt
-    - calling the LLM
-    - returning extracted knowledge text
-    """
+def add_knowledge_base():
+    with open(entities_file, "r", encoding="utf-8") as f:
+        entities_content = f.read().strip()
 
-    def __init__(self, model_name: str = "gpt-4o-mini"):
-        self.llm = init_chat_model(model_name)
+    with open(relations_file, "r", encoding="utf-8") as f:
+        relations_content = f.read().strip()
 
-    def _build_extraction_prompt(
-        self,
-        text: str,
-        article_id: int,
-        title: str,
-        is_new: bool,
-        kb_text: str = "",
-    ) -> str:
-        if is_new:
-            mode_instruction = (
-                "Nie ma jeszcze bazy wiedzy. Na podstawie tekstu wygeneruj pierwszą bazę wiedzy."
-            )
-            kb_section = ""
-        else:
-            mode_instruction = (
-                "Istnieje już baza wiedzy. Na podstawie nowego tekstu dodaj TYLKO podmioty i relacje, "
-                "które jeszcze nie istnieją."
-            )
-            kb_section = f"""
-            Oto aktualna baza wiedzy:
+    return (
+        "[ENTITIES]\n"
+        f"{entities_content}\n"
+        f"\n"
+        "[RELATIONS]\n"
+        f"{relations_content}"
+    )
+
+
+def _build_extraction_prompt(text: str,is_new: bool) -> str:
+    kb_text = add_knowledge_base()
+
+    print("IS NEW?", is_new)
+
+    if is_new:
+        mode_instruction = (
+            "Nie istnieje jeszcze żadna baza wiedzy. "
+            "Na podstawie dostarczonego tekstu wygeneruj pierwszą bazę wiedzy."
+        )
+        kb_section = ""
+    else:
+        mode_instruction = (
+            "Istnieje już baza wiedzy. "
+            "Na podstawie nowego tekstu zaktualizuj bazę wiedzy."
+        )
+        kb_section = f"""
+            Aktualna baza wiedzy:
             \"\"\"
             {kb_text}
             \"\"\"
             """
 
-        return dedent(f"""
+    return dedent(f"""
         {mode_instruction}
 
         {kb_section}
@@ -63,55 +69,41 @@ class KnowledgeExtractionService:
         \"\"\"
         """).strip()
 
+
+class KnowledgeExtractionService:
+    def __init__(self, model_name: str = "gpt-4o-mini"):
+        self.llm = init_chat_model(model_name)
+
     def extract_knowledge(
-        self,
-        *,
-        text: str,
-        article_id: int,
-        title: str,
-        is_new: bool,
-        kb_file: Optional[Path] = None,
-        kb_text: Optional[str] = None,
+            self,
+            text: str,
+            is_new: bool
     ) -> str:
-        """
-        Extracts knowledge from article text using the LLM.
 
-        You can pass either:
-        - kb_text directly, or
-        - kb_file (it will be read if not is_new)
-        """
-
-        # Determine current KB text (if any)
-        if not is_new:
-            if kb_text is None and kb_file is not None and kb_file.exists():
-                kb_text = kb_file.read_text(encoding="utf-8")
-        else:
-            kb_text = ""
-
-        prompt = self._build_extraction_prompt(
+        prompt = _build_extraction_prompt(
             text=text,
-            article_id=article_id,
-            title=title,
-            is_new=is_new,
-            kb_text=kb_text or "",
+            is_new=is_new
         )
 
-        # response = self.llm.invoke([
-        #     {"role": "system", "content": "Jesteś systemem do ekstrakcji wiedzy."},
-        #     {"role": "user", "content": prompt},
-        # ])
+        print("ENV: ", os.getenv("OPENAI_REQUEST"))
 
-        mock = f"""
-        [ENTITIES]
-        MockEntity1
-        MockEntity2
+        if os.getenv("OPENAI_REQUEST") == "true":
+            response = self.llm.invoke([
+                {"role": "system", "content": "Jesteś systemem do ekstrakcji wiedzy."},
+                {"role": "user", "content": prompt},
+            ])
 
-        [RELATIONS]
-        MockEntity1 -> mock_relation -> MockEntity2
-        """
+            return response.content.strip()
+        else:
+            mock = f"""
+                    [ENTITIES]
+                    MockEntity1
+                    MockEntity2
 
-        # return response.content.strip()
-        return mock.strip()
+                    [RELATIONS]
+                    MockEntity1 -> mock_relation -> MockEntity2
+                    """
+            return mock.strip()
 
 
 knowledge_extraction_service = KnowledgeExtractionService()

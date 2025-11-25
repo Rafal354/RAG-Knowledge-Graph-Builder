@@ -29,7 +29,6 @@ def parse(entities_text: str, relations_text: str) -> KBParsed:
 
     for line in lines:
         print(line)
-
         parts = [p.strip() for p in line.split("->")]
         if len(parts) != 3:
             continue

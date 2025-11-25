@@ -41,13 +41,8 @@ class FileArticleRepository(ArticleRepository):
 
     def save_article(self, title: str, text: str) -> Dict:
         index = self._read_index()
-
-        print("INDEX:", index)
-
         new_id = _generate_next_id(index)
-        print("NEW ID:", new_id)
         filename = self.base_dir / "articles" / f"{new_id}.txt"
-        print("FILENAME:", filename)
         try:
             filename.write_text(text, encoding="utf-8")
         except Exception as e:

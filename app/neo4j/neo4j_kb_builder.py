@@ -5,9 +5,9 @@ from neo4j import GraphDatabase, Session
 
 from app.parser.knowledge_base_parser import parse, KBParsed
 
-ENTITIES_FILE = Path("C:\\Users\\tekie\\PycharmProjects\\Magisterka\\database\\entities.txt")
-RELATIONS_FILE = Path("C:\\Users\\tekie\\PycharmProjects\\Magisterka\\database\\relations.txt")
-
+BASE_DIR = Path(__file__).resolve().parent.parent.parent / "database"
+ENTITIES_FILE = BASE_DIR / "entities.txt"
+RELATIONS_FILE = BASE_DIR / "relations.txt"
 
 def add_entities_and_relations(session: Session, parsed: KBParsed):
     total_entities = 0
@@ -60,14 +60,9 @@ class Neo4jKBBuilder:
     def update_graph(self) -> Dict[str, Any]:
         parsed = parse(ENTITIES_FILE.read_text(encoding="utf-8"), RELATIONS_FILE.read_text(encoding="utf-8"))
 
-        print("================ PARSED ===================")
-        print(parsed)
-        print("================ PARSED ===================")
-
         with self.driver.session() as session:
             clean_database(session)
             entities, relations = add_entities_and_relations(session, parsed)
-            # entities, relations = 0, 0
 
         return {
             "entities_total": entities,
