@@ -1,0 +1,75 @@
+# -------------------------
+# Python
+# -------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+*.log
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local environment variables
+.env
+*.env
+.env.*
+
+# Poetry / pipenv
+.poetry/
+Pipfile.lock
+
+# Build / Packaging
+build/
+dist/
+*.egg-info/
+*.egg
+
+# -------------------------
+# PyCharm / IDE
+# -------------------------
+.idea/
+*.iml
+
+# VSCode (in case)
+.vscode/
+
+# -------------------------
+# Node / frontend
+# -------------------------
+frontend/node_modules/
+frontend/dist/
+frontend/.parcel-cache/
+frontend/.cache/
+frontend/build/
+
+# -------------------------
+# Neo4j Desktop / artifacts
+# -------------------------
+database/db/
+database/neo4j/
+database/logs/
+database/import/
+*.dump
+*.neo4j
+*.graphdb
+
+# -------------------------
+# OS junk
+# -------------------------
+.DS_Store
+Thumbs.db
+
+# -------------------------
+# Project-specific ignored files
+# -------------------------
+notes.txt
+
+# -------------------------
+# Database
+# -------------------------
+database/*

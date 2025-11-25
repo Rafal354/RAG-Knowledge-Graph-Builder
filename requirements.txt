@@ -1,0 +1,10 @@
+pydantic-settings
+python-dotenv
+openai
+langchain-core
+langchain
+requests
+pydantic
+fastapi
+uvicorn[standard]
+neo4j
