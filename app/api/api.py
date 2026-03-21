@@ -2,9 +2,9 @@ import logging
 
 from fastapi import APIRouter
 
+from app.articles.model.article_entity import Base
 from app.core.config import settings
 from app.db.database import engine
-from app.db.model.article_model import Base
 from app.neo4j.neo4j_kb_builder import Neo4jKBBuilder
 
 logger = logging.getLogger(__name__)

@@ -1,12 +1,12 @@
 import logging
+from typing import List
 
 from fastapi import APIRouter, HTTPException
 
-from app.api import api
-from app.model.article_list_response import ArticleListResponse
-from app.model.article_meta import ArticleMeta
-from app.model.ingest_request import IngestRequest
-from app.services.naive_graph_ingest_service import graph_ingest_service
+from app.articles.model.add_article_request import AddArticleRequest
+from app.articles.model.article import Article
+from app.articles.model.article_details import ArticleDetails
+from app.services.article_service import article_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -14,55 +14,50 @@ router = APIRouter()
 ARTICLE_NOT_FOUND = "Article not found"
 
 
-@router.post("/articles", response_model=dict, status_code=201)
-async def add_article(request: IngestRequest):
+@router.post("/articles", response_model=ArticleDetails, status_code=201)
+async def add_article(request: AddArticleRequest):
     """
-    Saves a new article to the database and updates the knowledge graph
+    Add an article
+    :param request:
+    :return:
     """
-    if api.builder is None:
-        raise HTTPException(status_code=500, detail="Neo4j driver not initialized")
-
     try:
-        logger.info("Trying to add new article")
-        result = graph_ingest_service.add_article(request)
-        logger.info("Added new article: %s", result)
-        logger.info("Updating knowledge graph")
-        stats = api.builder.update_graph()
-        logger.info("Graph built successfully stats: %s", stats)
-
+        return article_service.add_article(request)
     except Exception as e:
-        logger.exception("Error during adding article")
-        raise HTTPException(status_code=500, detail=str(e))
-
-    return {"status": "ok", "database": result}
+        logger.exception("Unexpected error during adding article: %s", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/articles", response_model=ArticleListResponse)
+@router.get("/articles", response_model=List[ArticleDetails], status_code=200)
 async def list_articles():
     """
     Get all articles metadata
     """
-    logger.info("Listing all articles")
-    items = graph_ingest_service.list_articles()
-    return ArticleListResponse(items=[ArticleMeta(**item) for item in items])
+    return article_service.list_articles()
 
 
-@router.get("/articles/{article_id}")
+@router.get("/articles/{article_id}", response_model=Article, status_code=200)
 async def get_article(article_id: int):
-    logger.info("Getting article with id=%s", article_id)
-    article = graph_ingest_service.get_article(article_id)
+    """
+    Get an article
+    :param article_id:
+    :return:
+    """
+    article = article_service.get_article(article_id)
     if not article:
         logger.warning("Article with id=%s not found", article_id)
         raise HTTPException(status_code=404, detail=ARTICLE_NOT_FOUND)
     return article
 
 
-@router.delete("/articles/{article_id}")
+@router.delete("/articles/{article_id}", status_code=204)
 async def delete_article(article_id: int):
-    deleted = graph_ingest_service.delete_article(article_id)
+    """
+    Delete an article
+    :param article_id:
+    :return:
+    """
+    deleted = article_service.delete_article(article_id)
     if not deleted:
         logger.warning("Article with id=%s not found", article_id)
         raise HTTPException(status_code=404, detail=ARTICLE_NOT_FOUND)
-
-    logger.info("Deleted article with id=%s", article_id)
-    return {"status": "ok", "message": f"Article {article_id} deleted"}

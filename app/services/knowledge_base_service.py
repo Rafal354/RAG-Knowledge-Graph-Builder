@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Dict
 
+from app.api import api
 from app.services.knowledge_extraction_service import knowledge_extraction_service
 
 
@@ -42,7 +43,7 @@ class KnowledgeBaseService:
         if not self.relations_file.exists():
             self.relations_file.touch()
 
-    def update_from_article(self, article_id: int, title: str, text: str) -> Dict:
+    def update_from_article(self, title: str, text: str) -> Dict:
         is_new = self.entities_file.stat().st_size == 0
 
         extraction_result = knowledge_extraction_service.extract_knowledge(text=text, is_new=is_new)
@@ -56,6 +57,8 @@ class KnowledgeBaseService:
         with self.relations_file.open("w", encoding="utf-8") as f:
             f.write(relations_str)
             # f.write("\n\n")
+
+        api.builder.update_graph()
 
         return {
             "entities_file": str(self.entities_file),
