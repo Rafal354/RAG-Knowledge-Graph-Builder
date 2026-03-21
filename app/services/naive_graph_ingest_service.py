@@ -1,6 +1,6 @@
 from typing import List, Optional, Dict
 
-from app.db.file_article_repository import ArticleRepository, FileArticleRepository
+from app.db.repository.simple_article_repository import ArticleRepository, FileArticleRepository
 from app.model.ingest_request import IngestRequest
 from app.services.knowledge_base_service import KnowledgeBaseService
 

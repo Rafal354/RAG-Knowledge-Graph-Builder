@@ -3,9 +3,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Optional, Dict
 
-from app.db.article_repository import ArticleRepository
+from app.db.repository.article_repository import ArticleRepository
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent / "database"
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent / "database"
 INDEX_FILE = BASE_DIR / "index.json"
 
 BASE_DIR.mkdir(parents=True, exist_ok=True)

@@ -3,6 +3,8 @@ import logging
 from fastapi import APIRouter, HTTPException
 
 from app.core.config import settings
+from app.db.database import engine
+from app.db.model.article_model import Base
 from app.model.article_list_response import ArticleListResponse
 from app.model.article_meta import ArticleMeta
 from app.model.ingest_request import IngestRequest
@@ -18,6 +20,7 @@ ARTICLE_NOT_FOUND = "Article not found"
 
 def startup_event():
     global builder
+    Base.metadata.create_all(bind=engine)
     builder = Neo4jKBBuilder(
         uri=settings.neo4j_uri,
         user=settings.neo4j_user,
