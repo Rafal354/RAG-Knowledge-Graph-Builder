@@ -5,8 +5,8 @@ from sqlalchemy import select
 from app.articles.model.article import Article
 from app.articles.model.article_details import ArticleDetails
 from app.articles.model.article_entity import ArticleEntity
+from app.articles.repository.article_repository import ArticleRepository
 from app.db.database import SessionLocal
-from app.db.repository.article_repository import ArticleRepository
 
 
 class PostgresArticleRepository(ArticleRepository):

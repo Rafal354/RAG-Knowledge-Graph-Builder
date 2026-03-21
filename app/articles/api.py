@@ -3,10 +3,10 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException
 
-from app.articles.model.add_article_request import AddArticleRequest
+from app.articles.dto.add_article_request import AddArticleRequest
 from app.articles.model.article import Article
 from app.articles.model.article_details import ArticleDetails
-from app.services.article_service import article_service
+from app.articles.service.article_service import article_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

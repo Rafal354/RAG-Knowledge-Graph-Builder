@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Optional, Dict
 
-from app.db.repository.article_repository import ArticleRepository
+from app.articles.repository.article_repository import ArticleRepository
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent / "database"
 INDEX_FILE = BASE_DIR / "index.json"
