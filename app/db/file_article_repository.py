@@ -67,7 +67,8 @@ class FileArticleRepository(ArticleRepository):
         if not meta:
             return None
 
-        file_path = Path(meta["filename"])
+        file_path = Path("database/articles") / f"{article_id}.txt"
+
         if not file_path.exists():
             return None
 
@@ -76,16 +77,18 @@ class FileArticleRepository(ArticleRepository):
 
     def delete_article(self, article_id: int) -> bool:
         index = self._read_index()
-        new_index = [m for m in index if int(m["article_id"]) != article_id]
 
-        if len(new_index) == len(index):
+        meta = next((m for m in index if int(m["article_id"]) == article_id), None)
+        if meta is None:
             return False
 
-        self._write_index(new_index)
+        file_path = (self.base_dir / "articles" / f"{article_id}.txt").resolve()
 
-        file_path = self.base_dir / f"{article_id}.txt"
         if file_path.exists():
             file_path.unlink()
+
+        new_index = [m for m in index if int(m["article_id"]) != article_id]
+        self._write_index(new_index)
 
         return True
 

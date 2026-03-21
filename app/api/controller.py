@@ -83,7 +83,7 @@ async def get_article(article_id: int):
 
 
 @router.delete("/articles/{article_id}")
-async def delete_article(article_id: str):
+async def delete_article(article_id: int):
     deleted = graph_ingest_service.delete_article(article_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Article not found")
