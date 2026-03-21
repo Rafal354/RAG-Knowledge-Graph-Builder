@@ -3,21 +3,16 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.controller import router, startup_event, shutdown_event
+from app.api.api import router as health_router, startup_event, shutdown_event
+from app.articles.api import router as articles_router
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
 )
-logger = logging.getLogger(__name__)
 
-app = FastAPI(
-    title="Building Knowledge Base API",
-    description="API for receiving article texts and building a graph-based knowledge database.",
-    version="0.2.0",
-)
+app = FastAPI()
 
-# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -26,10 +21,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routing
-app.include_router(router)
-# Lifecycle
 app.add_event_handler("startup", startup_event)
 app.add_event_handler("shutdown", shutdown_event)
 
-logger.info("Application initialized")
+app.include_router(health_router)
+app.include_router(articles_router)
