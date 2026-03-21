@@ -1,13 +1,15 @@
 import logging
 
-from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.controller import router, startup_event, shutdown_event
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
+)
 logger = logging.getLogger(__name__)
-# load_dotenv()
 
 app = FastAPI(
     title="Building Knowledge Base API",
@@ -24,6 +26,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Routing
 app.include_router(router)
+# Lifecycle
 app.add_event_handler("startup", startup_event)
 app.add_event_handler("shutdown", shutdown_event)
+
+logger.info("Application initialized")
