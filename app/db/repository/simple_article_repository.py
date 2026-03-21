@@ -20,7 +20,7 @@ def _generate_next_id(index: List[Dict]) -> int:
     return max(existing_ids) + 1
 
 
-class FileArticleRepository(ArticleRepository):
+class SimpleArticleRepository(ArticleRepository):
 
     def __init__(self, base_dir: Path = BASE_DIR, index_file: Path = INDEX_FILE):
         self.base_dir = base_dir

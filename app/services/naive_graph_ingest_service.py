@@ -1,6 +1,7 @@
 from typing import List, Optional, Dict
 
-from app.db.repository.simple_article_repository import ArticleRepository, FileArticleRepository
+from app.db.repository.postgres_article_repository import PostgresArticleRepository
+from app.db.repository.simple_article_repository import ArticleRepository
 from app.model.ingest_request import IngestRequest
 from app.services.knowledge_base_service import KnowledgeBaseService
 
@@ -39,4 +40,4 @@ class NaiveGraphIngestService:
         return self.repo.list_articles()
 
 
-graph_ingest_service = NaiveGraphIngestService(FileArticleRepository())
+graph_ingest_service = NaiveGraphIngestService(PostgresArticleRepository())
