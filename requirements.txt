@@ -1,3 +1,4 @@
+sqlalchemy
 pydantic-settings
 python-dotenv
 openai
