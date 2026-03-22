@@ -1,11 +1,9 @@
 from datetime import datetime
 
 from sqlalchemy import DateTime, Integer, Text, func
-from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
+from sqlalchemy.orm import Mapped, mapped_column
 
-
-class Base(DeclarativeBase):
-    pass
+from app.config.database import Base
 
 
 class ArticleEntity(Base):

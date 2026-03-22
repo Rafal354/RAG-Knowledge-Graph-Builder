@@ -5,7 +5,7 @@ from app.articles.model.article import Article
 from app.articles.model.article_details import ArticleDetails
 from app.articles.repository.postgres_article_repository import PostgresArticleRepository
 from app.articles.repository.simple_article_repository import ArticleRepository
-from app.kb.service.knowledge_base_service import knowledge_base_service
+from app.kb.knowledge_base_service import knowledge_base_service
 
 
 class ArticleService:
@@ -13,8 +13,9 @@ class ArticleService:
         self.repo = repo
 
     def add_article(self, req: AddArticleRequest) -> ArticleDetails:
+        is_new = True if len(self.repo.list_articles()) == 0 else False
         article_details = self.repo.save_article(req.title, req.text)
-        knowledge_base_service.update_fun(req)
+        knowledge_base_service.update_from_request_async(req, is_new)
         return article_details
 
     def list_articles(self) -> List[ArticleDetails]:
