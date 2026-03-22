@@ -14,4 +14,4 @@ SessionLocal = sessionmaker(
     autoflush=False,
     autocommit=False,
     future=True,
-)   
+)

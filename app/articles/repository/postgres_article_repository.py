@@ -6,7 +6,7 @@ from app.articles.model.article import Article
 from app.articles.model.article_details import ArticleDetails
 from app.articles.model.article_entity import ArticleEntity
 from app.articles.repository.article_repository import ArticleRepository
-from app.db.database import SessionLocal
+from app.config.database import SessionLocal
 
 
 class PostgresArticleRepository(ArticleRepository):
