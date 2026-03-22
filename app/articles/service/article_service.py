@@ -5,7 +5,7 @@ from app.articles.model.article import Article
 from app.articles.model.article_details import ArticleDetails
 from app.articles.repository.postgres_article_repository import PostgresArticleRepository
 from app.articles.repository.simple_article_repository import ArticleRepository
-from app.services.knowledge_base_service import knowledge_base_service
+from app.kb.service.knowledge_base_service import knowledge_base_service
 
 
 class ArticleService:
