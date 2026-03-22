@@ -7,7 +7,11 @@ from langchain.chat_models import init_chat_model
 from app.api import api
 from app.graph.graph_repository import GraphRepository
 from app.graph.graph_service import GraphService
-from app.kb.prompt_service import prompt_service
+from app.kb.prompt_service import (
+    get_prompt_for_existing_graph,
+    get_prompt_for_new_graph,
+    get_system_prompt,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -23,12 +27,12 @@ class KnowledgeBaseService:
         self.executor.submit(self._update_from_article, req.title, req.text, is_new)
 
     def _update_from_article(self, title: str, text: str, is_new: bool) -> None:
-        system_prompt = prompt_service.get_system_prompt()
+        system_prompt = get_system_prompt()
         if is_new:
-            user_prompt = prompt_service.get_prompt_for_new_graph(title, text)
+            user_prompt = get_prompt_for_new_graph(title, text)
         else:
             graph_text = self.graph_service.get_latest_graph_text()
-            user_prompt = prompt_service.get_prompt_for_existing_graph(title, text, graph_text)
+            user_prompt = get_prompt_for_existing_graph(title, text, graph_text)
 
         logger.info(f"User prompt: {user_prompt}")
         logger.info(f"System prompt: {system_prompt}")
