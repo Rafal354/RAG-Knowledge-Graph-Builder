@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter
 
 from app.articles.model.article_entity import Base
-from app.config.config import settings
+from app.config.settings import settings
 from app.db.database import engine
 from app.neo4j.neo4j_kb_builder import Neo4jKBBuilder
 

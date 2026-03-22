@@ -1,9 +1,19 @@
+import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Dict
 
 from app.api import api
 from app.services.knowledge_extraction_service import knowledge_extraction_service
 
+executor = ThreadPoolExecutor(max_workers=4)
+
+def _update_kb_async(title: str, text: str) -> None:
+    try:
+        time.sleep(10)
+        knowledge_base_service.update_from_article(title=title, text=text)
+    except Exception as e:
+        print(f"Knowledge base update failed: {e}")
 
 def split_kb_sections(extraction_result):
 
@@ -43,6 +53,12 @@ class KnowledgeBaseService:
         if not self.relations_file.exists():
             self.relations_file.touch()
 
+    def update_fun(self, req) -> None:
+        executor.submit(_update_kb_async, req.title, req.text)
+
+
+
+
     def update_from_article(self, title: str, text: str) -> Dict:
         is_new = self.entities_file.stat().st_size == 0
 
@@ -65,3 +81,5 @@ class KnowledgeBaseService:
             "relations_file": str(self.relations_file),
             "is_new": is_new,
         }
+
+knowledge_base_service = KnowledgeBaseService()

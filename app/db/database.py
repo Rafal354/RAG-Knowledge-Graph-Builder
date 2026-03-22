@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.config.config import settings
+from app.config.settings import settings
 
 engine = create_engine(
     settings.postgres_url,
