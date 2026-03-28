@@ -1,13 +1,12 @@
 from pydantic import BaseModel, Field
 
-from app.graph.graph_entity import GraphEntity
+from app.graph.model.graph_entity import GraphEntity
 
 
 class GraphRelationDetails(BaseModel):
     entity_1: str = Field(..., description="Source entity")
     relation: str = Field(..., description="Relation type")
     entity_2: str = Field(..., description="Target entity")
-
 
 
 class GraphDetails(BaseModel):

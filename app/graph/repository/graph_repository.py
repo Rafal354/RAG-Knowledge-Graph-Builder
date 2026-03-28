@@ -3,8 +3,8 @@ import logging
 from sqlalchemy.orm import selectinload
 
 from app.config.database import SessionLocal
-from app.graph.graph_entity import GraphEntity, GraphRelationEntity
-from app.graph.graph_model import GraphDetails
+from app.graph.model.graph_entity import GraphEntity, GraphRelationEntity
+from app.graph.model.graph import GraphDetails
 
 logger = logging.getLogger(__name__)
 

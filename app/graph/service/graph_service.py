@@ -1,9 +1,10 @@
 import logging
 
-from app.graph.graph_model import GraphDetails
-from app.graph.graph_repository import GraphRepository
+from app.graph.model.graph import GraphDetails
+from app.graph.repository.graph_repository import GraphRepository
 
 logger = logging.getLogger(__name__)
+
 
 class GraphService:
     def __init__(self, graph_repository: GraphRepository) -> None:
@@ -31,9 +32,11 @@ class GraphService:
 
         return "\n".join(lines)
 
-
     @staticmethod
     def _parse_relations(llm_output: str) -> list[tuple[str, str, str]]:
+        if llm_output is None or llm_output == "":
+            return []
+        relations = llm_output.split("\n")
         parts = llm_output.split("[RELATIONS]", maxsplit=1)
         if len(parts) < 2:
             return []

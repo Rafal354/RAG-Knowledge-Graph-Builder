@@ -5,8 +5,8 @@ from concurrent.futures import ThreadPoolExecutor
 from langchain.chat_models import init_chat_model
 
 from app.api import api
-from app.graph.graph_repository import GraphRepository
-from app.graph.graph_service import GraphService
+from app.graph.repository.graph_repository import GraphRepository
+from app.graph.service.graph_service import GraphService
 from app.kb.prompt_service import (
     get_prompt_for_existing_graph,
     get_prompt_for_new_graph,
@@ -19,9 +19,8 @@ logger = logging.getLogger(__name__)
 class KnowledgeBaseService:
     def __init__(self, model_name: str = "gpt-4o-mini") -> None:
         self.graph_service = GraphService(GraphRepository())
-        self.llm = init_chat_model(model_name) # needs to be replaceable
+        self.llm = init_chat_model(model_name)  # needs to be replaceable
         self.executor = ThreadPoolExecutor(max_workers=4)
-
 
     def update_from_request_async(self, req, is_new) -> None:
         self.executor.submit(self._update_from_article, req.title, req.text, is_new)
@@ -62,6 +61,11 @@ class KnowledgeBaseService:
 
         self.graph_service.save_graph(response_to_return)
         api.neo4j_service.update_graph()
+
+    def clear_knowledge_base(self) -> None:
+        logger.info(f"Clearing knowledge base")
+        self.graph_service.save_graph("")  # Save an empty graph to clear the database
+        api.neo4j_service.clean_database()
 
 
 knowledge_base_service = KnowledgeBaseService()

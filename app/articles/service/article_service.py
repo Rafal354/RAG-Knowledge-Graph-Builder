@@ -28,5 +28,4 @@ class ArticleService:
         return self.repo.delete_article(article_id)
 
 
-
 article_service = ArticleService(PostgresArticleRepository())

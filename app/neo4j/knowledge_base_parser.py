@@ -16,7 +16,6 @@ class KBParsed:
 
 
 def parse(entities_text: str, relations_text: str) -> KBParsed:
-
     lines = [line.strip() for line in entities_text.splitlines()]
     entities: List[str] = []
 

@@ -2,12 +2,14 @@ const dropZone = document.getElementById("drop-zone");
 const fileInput = document.getElementById("file-input");
 const fileNameEl = document.getElementById("file-name");
 const previewEl = document.getElementById("preview");
-const titleInput = document.getElementById("title-input");
 const sendBtn = document.getElementById("send-btn");
 const statusEl = document.getElementById("status");
 
 let currentText = "";
 let currentFileName = "";
+
+// na start blokujemy przycisk
+sendBtn.disabled = true;
 
 function resetStatus() {
   statusEl.textContent = "";
@@ -16,6 +18,7 @@ function resetStatus() {
 
 function handleFile(file) {
   if (!file) return;
+
   if (!file.name.toLowerCase().endsWith(".txt")) {
     statusEl.textContent = "Only .txt files are handled";
     statusEl.className = "error";
@@ -30,15 +33,15 @@ function handleFile(file) {
     currentFileName = file.name;
 
     fileNameEl.textContent = "Chosen file: " + file.name;
+
     previewEl.textContent =
-      currentText.slice(0, 1000) + (currentText.length > 1000 ? "…" : "");
+      currentText.slice(0, 1000) +
+      (currentText.length > 1000 ? "…" : "");
 
-    if (!titleInput.value.trim()) {
-      titleInput.value = file.name.replace(/\.txt$/i, "");
-    }
-
+    // odblokuj przycisk jeśli jest content
     sendBtn.disabled = currentText.trim().length === 0;
   };
+
   reader.readAsText(file, "utf-8");
 }
 
@@ -69,12 +72,13 @@ dropZone.addEventListener("drop", (event) => {
 sendBtn.addEventListener("click", async () => {
   resetStatus();
 
-  const title = titleInput.value.trim();
-  if (!title) {
-    statusEl.textContent = "Enter article title";
+  if (!currentFileName) {
+    statusEl.textContent = "No file selected";
     statusEl.className = "error";
     return;
   }
+
+  const title = currentFileName.replace(/\.txt$/i, "").trim();
 
   if (!currentText.trim()) {
     statusEl.textContent = "Lack of content, file empty?";
@@ -98,6 +102,7 @@ sendBtn.addEventListener("click", async () => {
     });
 
     const data = await response.json();
+    console.log("Response data:", data);
 
     if (!response.ok) {
       throw new Error(data.detail || "Error HTTP " + response.status);
@@ -105,9 +110,9 @@ sendBtn.addEventListener("click", async () => {
 
     statusEl.textContent =
       'Article saved: ID = ' +
-      data.database.article_id +
+      data.article_id +
       ', title = "' +
-      data.database.title +
+      data.title +
       '"';
     statusEl.className = "ok";
   } catch (err) {
