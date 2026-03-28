@@ -2,10 +2,9 @@ import logging
 
 from fastapi import APIRouter
 
-from app.graph.model.graph import GraphDetails
 from app.graph.repository.graph_repository import GraphRepository
-from app.kb.knowledge_base_service import knowledge_base_service
 from app.graph.service.graph_service import GraphService
+from app.kb.knowledge_base_service import knowledge_base_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
