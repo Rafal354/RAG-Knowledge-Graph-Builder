@@ -22,6 +22,9 @@ class GraphService:
     def get_latest_graph(self) -> GraphDetails | None:
         return self.graph_repository.get_latest_graph()
 
+    def get_graph(self, graph_id: int) -> GraphDetails | None:
+        return self.graph_repository.get_graph(graph_id)
+
     def build_graph_text(self, graph) -> str:
         if graph is None:
             return ""

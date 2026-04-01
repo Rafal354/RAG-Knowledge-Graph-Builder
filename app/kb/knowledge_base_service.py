@@ -17,9 +17,10 @@ logger = logging.getLogger(__name__)
 
 
 class KnowledgeBaseService:
-    def __init__(self, model_name: str = "gpt-4o-mini") -> None:
+    def __init__(self) -> None:
+        self.llm_model = "gpt-4o-mini"
         self.graph_service = GraphService(GraphRepository())
-        self.llm = init_chat_model(model_name)  # needs to be replaceable
+        self.llm = init_chat_model(self.llm_model)  # needs to be replaceable
         self.executor = ThreadPoolExecutor(max_workers=4)
 
     def update_from_request_async(self, req, is_new) -> None:
@@ -61,6 +62,9 @@ class KnowledgeBaseService:
 
         self.graph_service.save_graph(response_to_return)
         api.neo4j_service.update_graph()
+
+    def build_specific_version(self, graph_id: int) -> None:
+        api.neo4j_service.build_specific_version(graph_id)
 
     def clear_knowledge_base(self) -> None:
         logger.info(f"Clearing knowledge base")

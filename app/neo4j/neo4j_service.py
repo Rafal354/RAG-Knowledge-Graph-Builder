@@ -82,3 +82,12 @@ class Neo4jService:
         with self.driver.session() as session:
             clean_database(session)
             add_graph_to_neo4j(session, latest_graph)
+
+    def build_specific_version(self, graph_id: int) -> None:
+        logger.info("Neo4j")
+        graph = self.graph_service.get_graph(graph_id)
+        logger.info("Neo4j done: %s", graph)
+
+        with self.driver.session() as session:
+            clean_database(session)
+            add_graph_to_neo4j(session, graph)

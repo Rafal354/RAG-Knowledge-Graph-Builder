@@ -3,8 +3,8 @@ import logging
 from sqlalchemy.orm import selectinload
 
 from app.config.database import SessionLocal
-from app.graph.model.graph_entity import GraphEntity, GraphRelationEntity
 from app.graph.model.graph import GraphDetails
+from app.graph.model.graph_entity import GraphEntity, GraphRelationEntity
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +63,15 @@ class GraphRepository:
                 session.query(GraphEntity)
                 .options(selectinload(GraphEntity.relations))
                 .order_by(GraphEntity.version.desc())
+                .first()
+            )
+
+    def get_graph(self, graph_id: int) -> GraphEntity | None:
+        with SessionLocal() as session:
+            return (
+                session.query(GraphEntity)
+                .options(selectinload(GraphEntity.relations))
+                .filter(GraphEntity.id == graph_id)
                 .first()
             )
 

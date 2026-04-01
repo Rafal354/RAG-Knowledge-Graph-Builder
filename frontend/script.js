@@ -1,27 +1,41 @@
 const dropZone = document.getElementById("drop-zone");
 const fileInput = document.getElementById("file-input");
-const fileNameEl = document.getElementById("file-name");
 const previewEl = document.getElementById("preview");
+const titleEl = document.getElementById("title");
 const sendBtn = document.getElementById("send-btn");
+const clearGraphBtn = document.getElementById("clear-graph-btn");
 const statusEl = document.getElementById("status");
 
 let currentText = "";
 let currentFileName = "";
+let statusTimeout;
 
 // na start blokujemy przycisk
 sendBtn.disabled = true;
 
 function resetStatus() {
+  clearTimeout(statusTimeout);
   statusEl.textContent = "";
   statusEl.className = "";
+}
+
+function setStatus(message, type) {
+  clearTimeout(statusTimeout);
+
+  statusEl.textContent = message;
+  statusEl.className = type;
+
+  statusTimeout = setTimeout(() => {
+    statusEl.textContent = "";
+    statusEl.className = "";
+  }, 5000);
 }
 
 function handleFile(file) {
   if (!file) return;
 
   if (!file.name.toLowerCase().endsWith(".txt")) {
-    statusEl.textContent = "Only .txt files are handled";
-    statusEl.className = "error";
+    setStatus("Only .txt files are handled", "error");
     return;
   }
 
@@ -32,13 +46,11 @@ function handleFile(file) {
     currentText = e.target.result || "";
     currentFileName = file.name;
 
-    fileNameEl.textContent = "Chosen file: " + file.name;
-
     previewEl.textContent =
-      currentText.slice(0, 1000) +
-      (currentText.length > 1000 ? "…" : "");
+      currentText.slice(0, 1000) + (currentText.length > 1000 ? "…" : "");
 
-    // odblokuj przycisk jeśli jest content
+    titleEl.textContent = file.name.replace(/\.txt$/i, "").trim();
+
     sendBtn.disabled = currentText.trim().length === 0;
   };
 
@@ -73,21 +85,21 @@ sendBtn.addEventListener("click", async () => {
   resetStatus();
 
   if (!currentFileName) {
-    statusEl.textContent = "No file selected";
-    statusEl.className = "error";
+    setStatus("No file selected", "error");
     return;
   }
 
   const title = currentFileName.replace(/\.txt$/i, "").trim();
 
   if (!currentText.trim()) {
-    statusEl.textContent = "Lack of content, file empty?";
-    statusEl.className = "error";
+    setStatus("Lack of content, file empty?", "error");
     return;
   }
 
   sendBtn.disabled = true;
   sendBtn.textContent = "Processing request...";
+  previewEl.textContent = "";
+  titleEl.textContent = "";
 
   try {
     const response = await fetch("http://127.0.0.1:8000/articles", {
@@ -108,19 +120,60 @@ sendBtn.addEventListener("click", async () => {
       throw new Error(data.detail || "Error HTTP " + response.status);
     }
 
-    statusEl.textContent =
+    setStatus(
       'Article saved: ID = ' +
-      data.article_id +
-      ', title = "' +
-      data.title +
-      '"';
-    statusEl.className = "ok";
+        data.article_id +
+        ', title = "' +
+        data.title +
+        '"',
+      "ok"
+    );
   } catch (err) {
     console.error(err);
-    statusEl.textContent = "Error processing request: " + err.message;
-    statusEl.className = "error";
+    setStatus("Error processing request: " + err.message, "error");
   } finally {
-    sendBtn.disabled = false;
-    sendBtn.textContent = "Send request to the service";
+    sendBtn.disabled = true;
+    sendBtn.textContent = "Send";
+  }
+});
+
+clearGraphBtn.addEventListener("click", async () => {
+  resetStatus();
+
+  clearGraphBtn.disabled = true;
+  clearGraphBtn.textContent = "Clearing...";
+
+  try {
+    const response = await fetch("http://127.0.0.1:8000/graphs/clean", {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      let errorMessage = "Error HTTP " + response.status;
+
+      try {
+        const data = await response.json();
+        errorMessage = data.detail || errorMessage;
+      } catch {
+        // brak jsona w odpowiedzi
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    currentText = "";
+    currentFileName = "";
+    previewEl.textContent = "";
+    titleEl.textContent = "";
+    fileInput.value = "";
+    sendBtn.disabled = true;
+
+    setStatus("Knowledge graph deleted", "ok");
+  } catch (err) {
+    console.error(err);
+    setStatus("Error deleting graph: " + err.message, "error");
+  } finally {
+    clearGraphBtn.disabled = false;
+    clearGraphBtn.textContent = "Clear graph";
   }
 });
