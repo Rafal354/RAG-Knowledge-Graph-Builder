@@ -1,4 +1,5 @@
 import logging
+import os
 from concurrent.futures import ThreadPoolExecutor
 
 from langchain.chat_models import init_chat_model
@@ -15,6 +16,10 @@ logger = logging.getLogger(__name__)
 
 class KnowledgeBaseService:
     def __init__(self) -> None:
+        if settings.anthropic_api_key:
+            os.environ["ANTHROPIC_API_KEY"] = settings.anthropic_api_key
+        if settings.openai_api_key:
+            os.environ["OPENAI_API_KEY"] = settings.openai_api_key
         self.prompt_service = PromptService()
         self.graph_service = GraphService(GraphRepository())
         self.llm = init_chat_model(settings.llm_model)
@@ -25,36 +30,39 @@ class KnowledgeBaseService:
         self.executor.submit(self._update_from_article, req.title, req.text, is_new)
 
     def _update_from_article(self, title: str, text: str, is_new: bool) -> None:
-        if is_new:
-            prompt = self.prompt_service.build_prompt("new_graph", title=title, text=text)
-        else:
-            graph_text = self.graph_service.get_latest_graph_text()
-            prompt = self.prompt_service.build_prompt("existing_graph", title=title, text=text, graph=graph_text)
+        try:
+            if is_new:
+                prompt = self.prompt_service.build_prompt("new_graph", title=title, text=text)
+            else:
+                graph_text = self.graph_service.get_latest_graph_text()
+                prompt = self.prompt_service.build_prompt("existing_graph", title=title, text=text, graph=graph_text)
 
-        logger.info("Prompt: %s", prompt)
+            logger.info("Prompt: %s", prompt)
 
-        if settings.openai_request:
-            response = self.llm.invoke(prompt)
-            logger.info("Response (LLM): %s", response)
-            response_to_return = response.content.strip()
-        else:
-            mock = """
-                    [ENTITIES]
-                    entity_1
-                    entity_2
-                    entity_3
+            if settings.openai_request:
+                response = self.llm.invoke(prompt)
+                logger.info("Response (LLM): %s", response)
+                response_to_return = response.content.strip()
+            else:
+                mock = """
+                        [ENTITIES]
+                        entity_1
+                        entity_2
+                        entity_3
 
-                    [RELATIONS]
-                    entity_1 -> relation_1 -> entity_2
-                    entity_2 -> relation_2 -> entity_3
-                    """
-            logger.info("Response (mock): %s", mock)
-            response_to_return = mock.strip()
+                        [RELATIONS]
+                        entity_1 -> relation_1 -> entity_2
+                        entity_2 -> relation_2 -> entity_3
+                        """
+                logger.info("Response (mock): %s", mock)
+                response_to_return = mock.strip()
 
-        logger.info("Response: %s", response_to_return)
+            logger.info("Response: %s", response_to_return)
 
-        self.graph_service.save_graph(response_to_return)
-        self.neo4j_service.push_graph(self.graph_service.get_latest_graph())
+            self.graph_service.save_graph(response_to_return)
+            self.neo4j_service.push_graph(self.graph_service.get_latest_graph())
+        except Exception:
+            logger.exception("Failed to update knowledge base from article '%s'", title)
 
     def build_specific_version(self, graph_id: int) -> None:
         self.neo4j_service.push_graph(self.graph_service.get_graph(graph_id))

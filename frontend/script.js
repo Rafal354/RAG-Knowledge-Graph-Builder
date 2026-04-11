@@ -1,3 +1,9 @@
+const API_BASE_URL =
+  window.location.protocol !== "file:" &&
+  (window.location.port === "" || window.location.port === "80")
+    ? "/api"
+    : "http://localhost:8000";
+
 const dropZone = document.getElementById("drop-zone");
 const fileInput = document.getElementById("file-input");
 const previewEl = document.getElementById("preview");
@@ -102,7 +108,7 @@ sendBtn.addEventListener("click", async () => {
   titleEl.textContent = "";
 
   try {
-    const response = await fetch("/api/articles", {
+    const response = await fetch(`${API_BASE_URL}/articles`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -144,7 +150,7 @@ clearGraphBtn.addEventListener("click", async () => {
   clearGraphBtn.textContent = "Clearing...";
 
   try {
-    const response = await fetch("/api/graphs/clean", {
+    const response = await fetch(`${API_BASE_URL}/graphs/clean`, {
       method: "DELETE",
     });
 
