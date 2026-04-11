@@ -102,7 +102,7 @@ sendBtn.addEventListener("click", async () => {
   titleEl.textContent = "";
 
   try {
-    const response = await fetch("http://127.0.0.1:8000/articles", {
+    const response = await fetch("/api/articles", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -144,7 +144,7 @@ clearGraphBtn.addEventListener("click", async () => {
   clearGraphBtn.textContent = "Clearing...";
 
   try {
-    const response = await fetch("http://127.0.0.1:8000/graphs/clean", {
+    const response = await fetch("/api/graphs/clean", {
       method: "DELETE",
     });
 

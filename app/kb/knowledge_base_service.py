@@ -3,6 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from langchain.chat_models import init_chat_model
 
+from app.articles.dto.add_article_request import AddArticleRequest
 from app.config.settings import settings
 from app.graph.repository.graph_repository import GraphRepository
 from app.graph.service.graph_service import GraphService
@@ -16,11 +17,11 @@ class KnowledgeBaseService:
     def __init__(self) -> None:
         self.prompt_service = PromptService()
         self.graph_service = GraphService(GraphRepository())
-        self.llm = init_chat_model(settings.llm_model)  # needs to be replaceable
+        self.llm = init_chat_model(settings.llm_model)
         self.executor = ThreadPoolExecutor(max_workers=4)
         self.neo4j_service: Neo4jService | None = None
 
-    def update_from_request_async(self, req, is_new) -> None:
+    def update_from_request_async(self, req: AddArticleRequest, is_new: bool) -> None:
         self.executor.submit(self._update_from_article, req.title, req.text, is_new)
 
     def _update_from_article(self, title: str, text: str, is_new: bool) -> None:
@@ -30,14 +31,14 @@ class KnowledgeBaseService:
             graph_text = self.graph_service.get_latest_graph_text()
             prompt = self.prompt_service.build_prompt("existing_graph", title=title, text=text, graph=graph_text)
 
-        logger.info(f"Prompt: {prompt}")
+        logger.info("Prompt: %s", prompt)
 
         if settings.openai_request:
             response = self.llm.invoke(prompt)
-            logger.info(f"Response (LLM): {response}")
+            logger.info("Response (LLM): %s", response)
             response_to_return = response.content.strip()
         else:
-            mock = f"""
+            mock = """
                     [ENTITIES]
                     entity_1
                     entity_2
@@ -47,16 +48,16 @@ class KnowledgeBaseService:
                     entity_1 -> relation_1 -> entity_2
                     entity_2 -> relation_2 -> entity_3
                     """
-            logger.info(f"Response (mock): {mock}")
+            logger.info("Response (mock): %s", mock)
             response_to_return = mock.strip()
 
-        logger.info(f"Response: {response_to_return}")
+        logger.info("Response: %s", response_to_return)
 
         self.graph_service.save_graph(response_to_return)
-        self.neo4j_service.update_graph()
+        self.neo4j_service.push_graph(self.graph_service.get_latest_graph())
 
     def build_specific_version(self, graph_id: int) -> None:
-        self.neo4j_service.build_specific_version(graph_id)
+        self.neo4j_service.push_graph(self.graph_service.get_graph(graph_id))
 
     def shutdown(self) -> None:
         self.executor.shutdown(wait=True)

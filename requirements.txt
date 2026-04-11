@@ -4,8 +4,10 @@ python-dotenv
 openai
 langchain-core
 langchain
+langchain-openai
 requests
 pydantic
 fastapi
 uvicorn[standard]
 neo4j
+psycopg[binary]

@@ -4,8 +4,6 @@ from neo4j import GraphDatabase
 from neo4j import Session
 
 from app.graph.model.graph import GraphDetails
-from app.graph.repository.graph_repository import GraphRepository
-from app.graph.service.graph_service import GraphService
 
 logger = logging.getLogger(__name__)
 
@@ -58,12 +56,12 @@ def clean_database(session: Session):
 
     session.run("MATCH (n) DETACH DELETE n")
     result = session.run("MATCH (n) RETURN count(n) AS c").single()
+    logger.info("Nodes after deleting: %d", result["c"])
 
 
 class Neo4jService:
     def __init__(self, uri: str, user: str, password: str):
         self.driver = GraphDatabase.driver(uri, auth=(user, password))
-        self.graph_service = GraphService(GraphRepository())
 
     def close(self):
         self.driver.close()
@@ -72,20 +70,8 @@ class Neo4jService:
         with self.driver.session() as session:
             clean_database(session)
 
-    def update_graph(self) -> None:
-        logger.info("Updating Neo4j graph from latest version")
-        latest_graph = self.graph_service.get_latest_graph()
-        logger.info("Graph loaded, pushing to Neo4j: %s", latest_graph)
-
-        with self.driver.session() as session:
-            clean_database(session)
-            add_graph_to_neo4j(session, latest_graph)
-
-    def build_specific_version(self, graph_id: int) -> None:
-        logger.info("Building Neo4j graph from version id=%s", graph_id)
-        graph = self.graph_service.get_graph(graph_id)
-        logger.info("Graph loaded, pushing to Neo4j: %s", graph)
-
+    def push_graph(self, graph: GraphDetails | None) -> None:
+        logger.info("Pushing graph to Neo4j: %s", graph)
         with self.driver.session() as session:
             clean_database(session)
             add_graph_to_neo4j(session, graph)

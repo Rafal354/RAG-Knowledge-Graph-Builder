@@ -12,7 +12,7 @@ class GraphService:
 
     def save_graph(self, llm_output: str) -> GraphDetails:
         relations = self._parse_relations(llm_output)
-        logger.info(f"Relations: {relations}")
+        logger.info("Relations: %s", relations)
         return self.graph_repository.save_graph(relations)
 
     def get_latest_graph_text(self) -> str:
