@@ -9,12 +9,37 @@ const fileInput = document.getElementById("file-input");
 const previewEl = document.getElementById("preview");
 const titleEl = document.getElementById("title");
 const sendBtn = document.getElementById("send-btn");
+const modelSelect = document.getElementById("model-select");
 const clearGraphBtn = document.getElementById("clear-graph-btn");
 const statusEl = document.getElementById("status");
 
 let currentText = "";
 let currentFileName = "";
 let statusTimeout;
+
+async function fetchCurrentModel() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/model`);
+    const data = await res.json();
+    modelSelect.value = data.model;
+  } catch (err) {
+    console.error("Failed to fetch current model:", err);
+  }
+}
+
+modelSelect.addEventListener("change", async () => {
+  try {
+    await fetch(`${API_BASE_URL}/model`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model: modelSelect.value }),
+    });
+  } catch (err) {
+    console.error("Failed to set model:", err);
+  }
+});
+
+fetchCurrentModel();
 
 // na start blokujemy przycisk
 sendBtn.disabled = true;

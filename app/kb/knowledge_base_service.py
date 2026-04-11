@@ -20,17 +20,22 @@ class KnowledgeBaseService:
             os.environ["ANTHROPIC_API_KEY"] = settings.anthropic_api_key
         if settings.openai_api_key:
             os.environ["OPENAI_API_KEY"] = settings.openai_api_key
+        self.current_model: str = settings.llm_model
         self.prompt_service = PromptService()
         self.graph_service = GraphService(GraphRepository())
-        self.llm = init_chat_model(settings.llm_model)
         self.executor = ThreadPoolExecutor(max_workers=4)
         self.neo4j_service: Neo4jService | None = None
 
-    def update_from_request_async(self, req: AddArticleRequest, is_new: bool) -> None:
-        self.executor.submit(self._update_from_article, req.title, req.text, is_new)
+    def set_model(self, model: str) -> None:
+        logger.info("Switching model to: %s", model)
+        self.current_model = model
 
-    def _update_from_article(self, title: str, text: str, is_new: bool) -> None:
+    def update_from_request_async(self, req: AddArticleRequest, is_new: bool) -> None:
+        self.executor.submit(self._update_from_article, req.title, req.text, is_new, self.current_model)
+
+    def _update_from_article(self, title: str, text: str, is_new: bool, model: str) -> None:
         try:
+            llm = init_chat_model(model)
             if is_new:
                 prompt = self.prompt_service.build_prompt("new_graph", title=title, text=text)
             else:
@@ -40,7 +45,7 @@ class KnowledgeBaseService:
             logger.info("Prompt: %s", prompt)
 
             if settings.openai_request:
-                response = self.llm.invoke(prompt)
+                response = llm.invoke(prompt)
                 logger.info("Response (LLM): %s", response)
                 response_to_return = response.content.strip()
             else:

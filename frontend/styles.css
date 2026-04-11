@@ -86,6 +86,23 @@ input[type="text"] {
   color: var(--text);
 }
 
+select {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+  font-size: 14px;
+  background: var(--bg-light);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 button {
   margin-top: 24px;
   padding: 10px 18px;
