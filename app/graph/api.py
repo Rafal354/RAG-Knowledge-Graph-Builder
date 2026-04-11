@@ -9,6 +9,8 @@ from app.kb.knowledge_base_service import knowledge_base_service
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+_graph_service = GraphService(GraphRepository())
+
 
 @router.post("/graphs/{graph_id}", status_code=201)
 async def build_specific_version(graph_id: int):
@@ -17,17 +19,16 @@ async def build_specific_version(graph_id: int):
 
 @router.get("/graphs", status_code=200)  ## response_model=GraphDetails | None
 async def get_latest_graph():
-    logger.info(f"Getting graph with id={"latest"}")
-    return GraphService(GraphRepository()).get_latest_graph()
+    logger.info("Getting latest graph")
+    return _graph_service.get_latest_graph()
 
 
 @router.get("/graphs/{graph_id}", status_code=200)  ## response_model=GraphDetails | None
 async def get_graph(graph_id: int):
-    logger.info(f"Getting graph with id={graph_id}")
-    return GraphService(GraphRepository()).get_graph(graph_id)
+    logger.info("Getting graph with id=%s", graph_id)
+    return _graph_service.get_graph(graph_id)
 
 
 @router.delete("/graphs/clean", status_code=204)
 async def clean_graph():
-    print("Deleting graph")
     knowledge_base_service.clear_knowledge_base()

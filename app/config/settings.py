@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     neo4j_user: str
     neo4j_password: str
     openai_api_key: str | None = None
+    openai_request: bool = False
 
     postgres_host: str
     postgres_port: int = 5432

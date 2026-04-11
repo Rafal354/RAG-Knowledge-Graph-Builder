@@ -5,6 +5,7 @@ from fastapi import APIRouter
 from app.articles.model.article_entity import Base
 from app.config.database import engine
 from app.config.settings import settings
+from app.kb.knowledge_base_service import knowledge_base_service
 from app.neo4j.neo4j_service import Neo4jService
 
 logger = logging.getLogger(__name__)
@@ -22,10 +23,12 @@ def startup_event():
         user=settings.neo4j_user,
         password=settings.neo4j_password,
     )
+    knowledge_base_service.neo4j_service = neo4j_service
     logger.info("Neo4j driver initialized")
 
 
 def shutdown_event():
+    knowledge_base_service.shutdown()
     global neo4j_service
     if neo4j_service is not None:
         neo4j_service.close()

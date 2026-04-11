@@ -13,7 +13,7 @@ class ArticleService:
         self.repo = repo
 
     def add_article(self, req: AddArticleRequest) -> ArticleDetails:
-        is_new = True if len(self.repo.list_articles()) == 0 else False
+        is_new = not self.repo.list_articles()
         article_details = self.repo.save_article(req.title, req.text)
         knowledge_base_service.update_from_request_async(req, is_new)
         return article_details

@@ -1,69 +1,22 @@
-def get_prompt_for_existing_graph(title: str, text: str, graph: str) -> str:
-    return f"""
-Update the existing knowledge graph using the new article below.
-
-The result should represent a merged and consistent knowledge graph based on:
-- the existing graph
-- the new article
-
-The output should not be based only on the new article.
-It should reflect the combined knowledge from both sources.
-
-Return the result exactly in this format:
-
-[ENTITIES]
-entity_1
-entity_2
-
-[RELATIONS]
-entity_1 -> relation -> entity_2
-
-Existing knowledge graph:
-{graph}
-
-Article title:
-{title}
-
-Article text:
-{text}
-""".strip()
+from app.kb.prompts import PROMPTS
 
 
-def get_prompt_for_new_graph(title: str, text: str) -> str:
-    return f"""
-Build a knowledge graph from the article below.
+class PromptService:
+    def __init__(self, prompt_set: str = "default_pl"):
+        self.prompt_set = prompt_set
 
-Extract entities and relations mentioned in the text.
+    def build_prompt(self, prompt_type: str, **kwargs) -> str:
+        try:
+            template = PROMPTS[self.prompt_set][prompt_type]
+        except KeyError as e:
+            raise ValueError(
+                f"Prompt not found for prompt_set='{self.prompt_set}', "
+                f"prompt_type='{prompt_type}'"
+            ) from e
 
-Return the result exactly in this format:
-
-[ENTITIES]
-entity_1
-entity_2
-
-[RELATIONS]
-entity_1 -> relation -> entity_2
-
-Article title:
-{title}
-
-Article text:
-{text}
-""".strip()
-
-
-def get_system_prompt() -> str:
-    return """
-You are a knowledge extraction system.
-
-Your job is to extract entities and relationships from text and represent them in a structured format.
-
-Output format must strictly follow:
-
-[ENTITIES]
-entity_1
-entity_2
-
-[RELATIONS]
-entity_1 -> relation -> entity_2
-""".strip()
+        try:
+            return template.format(**kwargs)
+        except KeyError as e:
+            raise ValueError(
+                f"Missing template variable: {e} for prompt_type='{prompt_type}'"
+            ) from e

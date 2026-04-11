@@ -47,17 +47,14 @@ def add_graph_to_neo4j(session: Session, graph: GraphDetails) -> tuple[int, int]
         )
         total_relations += 1
 
-    print("Entities: %d" % total_entities)
-    print("Relations: %d" % total_relations)
+    logger.info("Entities added: %d, relations added: %d", total_entities, total_relations)
 
     return total_entities, total_relations
 
 
 def clean_database(session: Session):
     result = session.run("MATCH (n) RETURN count(n) AS c").single()
-    print("Nodes before deleting:", result["c"])
-
-    session.run("MATCH (n) DETACH DELETE n")
+    logger.info("Nodes before deleting: %d", result["c"])
 
     session.run("MATCH (n) DETACH DELETE n")
     result = session.run("MATCH (n) RETURN count(n) AS c").single()
@@ -72,21 +69,22 @@ class Neo4jService:
         self.driver.close()
 
     def clean_database(self):
-        clean_database(self.driver.session())
+        with self.driver.session() as session:
+            clean_database(session)
 
     def update_graph(self) -> None:
-        logger.info("Neo4j")
+        logger.info("Updating Neo4j graph from latest version")
         latest_graph = self.graph_service.get_latest_graph()
-        logger.info("Neo4j done: %s", latest_graph)
+        logger.info("Graph loaded, pushing to Neo4j: %s", latest_graph)
 
         with self.driver.session() as session:
             clean_database(session)
             add_graph_to_neo4j(session, latest_graph)
 
     def build_specific_version(self, graph_id: int) -> None:
-        logger.info("Neo4j")
+        logger.info("Building Neo4j graph from version id=%s", graph_id)
         graph = self.graph_service.get_graph(graph_id)
-        logger.info("Neo4j done: %s", graph)
+        logger.info("Graph loaded, pushing to Neo4j: %s", graph)
 
         with self.driver.session() as session:
             clean_database(session)
