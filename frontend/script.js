@@ -56,18 +56,19 @@ async function renderGraph() {
 
     const options = {
       nodes: {
-        shape: "dot",
-        size: 14,
+        shape: "box",
         color: {
           background: "#3b82f6",
           border: "#60a5fa",
           highlight: { background: "#60a5fa", border: "#93c5fd" },
         },
         font: { color: "#e5e5e5", size: 13 },
+        margin: 8,
+        borderWidth: 1,
       },
       edges: {
         color: { color: "#555", highlight: "#aaaaaa" },
-        font: { color: "#aaaaaa", size: 11, align: "middle" },
+        font: { color: "#e5e5e5", size: 11, align: "middle", strokeWidth: 0, background: "#1e1e1e" },
         smooth: { type: "dynamic" },
       },
       physics: {
