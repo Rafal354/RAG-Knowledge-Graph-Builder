@@ -33,7 +33,7 @@ async function pollForGraphUpdate(versionBefore) {
   const TIMEOUT_MS = 60000;
   const started = Date.now();
 
-  setStatus("Article saved. Waiting for graph update...", "ok");
+  setStatus("Article saved. Waiting for graph update...", "info");
 
   return new Promise((resolve) => {
     const interval = setInterval(async () => {
@@ -47,7 +47,7 @@ async function pollForGraphUpdate(versionBefore) {
       const version = await fetchGraphVersion();
       if (version !== null && version !== versionBefore) {
         clearInterval(interval);
-        setStatus(`Article saved. Graph updated to version ${version}.`, "ok");
+        setStatus(`Graph updated to version ${version}.`, "ok");
         resolve();
       }
     }, INTERVAL_MS);
@@ -117,7 +117,7 @@ function handleFile(file) {
     previewEl.textContent =
       currentText.slice(0, 1000) + (currentText.length > 1000 ? "…" : "");
 
-    titleEl.textContent = file.name.replace(/\.txt$/i, "").trim();
+    titleEl.innerHTML = `<span>${file.name.replace(/\.txt$/i, "").trim()}</span>`;
 
     sendBtn.disabled = currentText.trim().length === 0;
   };

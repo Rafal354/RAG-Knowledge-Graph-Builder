@@ -67,10 +67,10 @@ Thumbs.db
 # -------------------------
 # Project-specific ignored files
 # -------------------------
-notes.txt
+internal/notes.txt
 
 # -------------------------
 # Database
 # -------------------------
 database/*
-/TODO.md
+/internal/
