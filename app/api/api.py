@@ -1,4 +1,7 @@
 import logging
+import os
+import threading
+import webbrowser
 
 from fastapi import APIRouter
 
@@ -25,6 +28,10 @@ def startup_event():
     )
     knowledge_base_service.neo4j_service = neo4j_service
     logger.info("Neo4j driver initialized")
+    if not os.path.exists("/.dockerenv"):
+        frontend_url = "http://localhost:8000"
+        logger.info("Frontend available at: %s", frontend_url)
+        threading.Timer(1.5, webbrowser.open, args=[frontend_url]).start()
 
 
 def shutdown_event():

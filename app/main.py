@@ -1,8 +1,11 @@
 import logging
+import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.api import router as health_router, startup_event, shutdown_event
 from app.articles.api import router as articles_router
@@ -36,3 +39,9 @@ app.include_router(health_router)
 app.include_router(articles_router)
 app.include_router(graphs_router)
 app.include_router(model_router)
+
+IN_DOCKER = os.path.exists("/.dockerenv")
+if not IN_DOCKER:
+    frontend_dir = Path(__file__).parent.parent / "frontend"
+    if frontend_dir.exists():
+        app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")

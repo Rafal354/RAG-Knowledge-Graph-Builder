@@ -17,6 +17,81 @@ let currentText = "";
 let currentFileName = "";
 let statusTimeout;
 
+let networkInstance = null;
+
+async function renderGraph() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/graphs`);
+    if (!res.ok) return;
+    const data = await res.json();
+
+    const graphSection = document.getElementById("graph-section");
+
+    if (!data || !data.relations || data.relations.length === 0) {
+      graphSection.style.display = "none";
+      return;
+    }
+
+    const nodeMap = new Map();
+    let nodeId = 1;
+
+    for (const rel of data.relations) {
+      if (!nodeMap.has(rel.entity_1)) nodeMap.set(rel.entity_1, nodeId++);
+      if (!nodeMap.has(rel.entity_2)) nodeMap.set(rel.entity_2, nodeId++);
+    }
+
+    const nodes = new vis.DataSet(
+      [...nodeMap.entries()].map(([label, id]) => ({ id, label }))
+    );
+
+    const edges = new vis.DataSet(
+      data.relations.map((rel, i) => ({
+        id: i,
+        from: nodeMap.get(rel.entity_1),
+        to: nodeMap.get(rel.entity_2),
+        label: rel.relation,
+        arrows: "to",
+      }))
+    );
+
+    const options = {
+      nodes: {
+        shape: "dot",
+        size: 14,
+        color: {
+          background: "#3b82f6",
+          border: "#60a5fa",
+          highlight: { background: "#60a5fa", border: "#93c5fd" },
+        },
+        font: { color: "#e5e5e5", size: 13 },
+      },
+      edges: {
+        color: { color: "#555", highlight: "#aaaaaa" },
+        font: { color: "#aaaaaa", size: 11, align: "middle" },
+        smooth: { type: "dynamic" },
+      },
+      physics: {
+        stabilization: { iterations: 150 },
+        barnesHut: { gravitationalConstant: -5000, springLength: 120 },
+      },
+      interaction: { hover: true, tooltipDelay: 100 },
+    };
+
+    graphSection.style.display = "block";
+
+    if (networkInstance) {
+      networkInstance.destroy();
+    }
+    networkInstance = new vis.Network(
+      document.getElementById("graph-container"),
+      { nodes, edges },
+      options
+    );
+  } catch (err) {
+    console.error("Failed to render graph:", err);
+  }
+}
+
 async function fetchGraphVersion() {
   try {
     const res = await fetch(`${API_BASE_URL}/graphs`);
@@ -77,6 +152,7 @@ modelSelect.addEventListener("change", async () => {
 });
 
 fetchCurrentModel();
+renderGraph();
 
 // na start blokujemy przycisk
 sendBtn.disabled = true;
@@ -191,6 +267,7 @@ sendBtn.addEventListener("click", async () => {
     }
 
     await pollForGraphUpdate(versionBefore);
+    await renderGraph();
   } catch (err) {
     console.error(err);
     setStatus("Error processing request: " + err.message, "error");
@@ -232,6 +309,11 @@ clearGraphBtn.addEventListener("click", async () => {
     sendBtn.disabled = true;
 
     setStatus("Knowledge graph deleted", "ok");
+    document.getElementById("graph-section").style.display = "none";
+    if (networkInstance) {
+      networkInstance.destroy();
+      networkInstance = null;
+    }
   } catch (err) {
     console.error(err);
     setStatus("Error deleting graph: " + err.message, "error");
