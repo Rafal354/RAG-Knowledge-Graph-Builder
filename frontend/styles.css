@@ -67,6 +67,10 @@ input[type="text"] {
   display: none;
 }
 
+#preview:empty {
+  display: none;
+}
+
 #file-name {
   margin-top: 8px;
   font-size: 13px;

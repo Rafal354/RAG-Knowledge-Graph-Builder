@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     neo4j_password: str
     openai_api_key: str | None = None
     anthropic_api_key: str | None = None
+    google_api_key: str | None = None
     openai_request: bool = False
 
     postgres_host: str

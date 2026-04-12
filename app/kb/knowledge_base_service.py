@@ -20,6 +20,8 @@ class KnowledgeBaseService:
             os.environ["ANTHROPIC_API_KEY"] = settings.anthropic_api_key
         if settings.openai_api_key:
             os.environ["OPENAI_API_KEY"] = settings.openai_api_key
+        if settings.google_api_key:
+            os.environ["GOOGLE_API_KEY"] = settings.google_api_key
         self.current_model: str = settings.llm_model
         self.prompt_service = PromptService()
         self.graph_service = GraphService(GraphRepository())

@@ -17,6 +17,43 @@ let currentText = "";
 let currentFileName = "";
 let statusTimeout;
 
+async function fetchGraphVersion() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/graphs`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data ? data.version : null;
+  } catch {
+    return null;
+  }
+}
+
+async function pollForGraphUpdate(versionBefore) {
+  const INTERVAL_MS = 1500;
+  const TIMEOUT_MS = 60000;
+  const started = Date.now();
+
+  setStatus("Article saved. Waiting for graph update...", "ok");
+
+  return new Promise((resolve) => {
+    const interval = setInterval(async () => {
+      if (Date.now() - started > TIMEOUT_MS) {
+        clearInterval(interval);
+        setStatus("Article saved. Graph update is taking longer than expected.", "ok");
+        resolve();
+        return;
+      }
+
+      const version = await fetchGraphVersion();
+      if (version !== null && version !== versionBefore) {
+        clearInterval(interval);
+        setStatus(`Article saved. Graph updated to version ${version}.`, "ok");
+        resolve();
+      }
+    }, INTERVAL_MS);
+  });
+}
+
 async function fetchCurrentModel() {
   try {
     const res = await fetch(`${API_BASE_URL}/model`);
@@ -133,6 +170,8 @@ sendBtn.addEventListener("click", async () => {
   titleEl.textContent = "";
 
   try {
+    const versionBefore = await fetchGraphVersion();
+
     const response = await fetch(`${API_BASE_URL}/articles`, {
       method: "POST",
       headers: {
@@ -151,14 +190,7 @@ sendBtn.addEventListener("click", async () => {
       throw new Error(data.detail || "Error HTTP " + response.status);
     }
 
-    setStatus(
-      'Article saved: ID = ' +
-        data.article_id +
-        ', title = "' +
-        data.title +
-        '"',
-      "ok"
-    );
+    await pollForGraphUpdate(versionBefore);
   } catch (err) {
     console.error(err);
     setStatus("Error processing request: " + err.message, "error");

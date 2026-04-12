@@ -6,6 +6,7 @@ langchain-core
 langchain
 langchain-openai
 langchain-anthropic
+langchain-google-genai
 requests
 pydantic
 fastapi
