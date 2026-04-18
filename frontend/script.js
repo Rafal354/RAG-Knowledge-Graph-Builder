@@ -17,9 +17,15 @@ let currentText = "";
 let currentFileName = "";
 let statusTimeout;
 
-let networkInstance = null;
+const NEW_EDGE_HIGHLIGHT_MS = 15000;
 
-async function renderGraph() {
+let networkInstance = null;
+let knownEdgeKeys = null;
+let knownNodeLabels = null;
+
+const edgeKey = (rel) => `${rel.entity_1}|${rel.relation}|${rel.entity_2}`;
+
+async function renderGraph(highlightNew = false) {
   try {
     const res = await fetch(`${API_BASE_URL}/graphs`);
     if (!res.ok) return;
@@ -40,19 +46,41 @@ async function renderGraph() {
       if (!nodeMap.has(rel.entity_2)) nodeMap.set(rel.entity_2, nodeId++);
     }
 
-    const nodes = new vis.DataSet(
-      [...nodeMap.entries()].map(([label, id]) => ({ id, label }))
-    );
+    const nodesData = [...nodeMap.entries()].map(([label, id]) => {
+      const isNew = highlightNew && !knownNodeLabels?.has(label);
+      return {
+        id,
+        label,
+        ...(isNew && {
+          color: {
+            background: "#22c55e",
+            border: "#4ade80",
+            highlight: { background: "#4ade80", border: "#86efac" },
+          },
+        }),
+      };
+    });
 
-    const edges = new vis.DataSet(
-      data.relations.map((rel, i) => ({
+    knownNodeLabels = new Set(nodeMap.keys());
+    const nodes = new vis.DataSet(nodesData);
+
+    const edgesData = data.relations.map((rel, i) => {
+      const isNew = highlightNew && !knownEdgeKeys?.has(edgeKey(rel));
+      return {
         id: i,
         from: nodeMap.get(rel.entity_1),
         to: nodeMap.get(rel.entity_2),
         label: rel.relation,
         arrows: "to",
-      }))
-    );
+        ...(isNew && {
+          color: { color: "#22c55e", highlight: "#4ade80" },
+          font: { color: "#e5e5e5", size: 11, align: "middle", strokeWidth: 0, background: "#0f2d1a" },
+        }),
+      };
+    });
+
+    knownEdgeKeys = new Set(data.relations.map(edgeKey));
+    const edges = new vis.DataSet(edgesData);
 
     const options = {
       nodes: {
@@ -88,6 +116,17 @@ async function renderGraph() {
       { nodes, edges },
       options
     );
+
+    if (highlightNew) {
+      const newEdgeIds = edgesData.filter(e => e.color).map(e => e.id);
+      const newNodeIds = nodesData.filter(n => n.color).map(n => n.id);
+      if (newEdgeIds.length > 0 || newNodeIds.length > 0) {
+        setTimeout(() => {
+          if (newEdgeIds.length > 0) edges.update(newEdgeIds.map(id => ({ id, color: null, font: null })));
+          if (newNodeIds.length > 0) nodes.update(newNodeIds.map(id => ({ id, color: null })));
+        }, NEW_EDGE_HIGHLIGHT_MS);
+      }
+    }
   } catch (err) {
     console.error("Failed to render graph:", err);
   }
@@ -268,7 +307,7 @@ sendBtn.addEventListener("click", async () => {
     }
 
     await pollForGraphUpdate(versionBefore);
-    await renderGraph();
+    await renderGraph(true);
   } catch (err) {
     console.error(err);
     setStatus("Error processing request: " + err.message, "error");
@@ -315,6 +354,9 @@ clearGraphBtn.addEventListener("click", async () => {
       networkInstance.destroy();
       networkInstance = null;
     }
+    knownEdgeKeys = null;
+    knownNodeLabels = null;
+
   } catch (err) {
     console.error(err);
     setStatus("Error deleting graph: " + err.message, "error");
