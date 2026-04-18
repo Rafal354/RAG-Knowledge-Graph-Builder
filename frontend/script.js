@@ -20,8 +20,8 @@ let statusTimeout;
 const NEW_EDGE_HIGHLIGHT_MS = 15000;
 
 let networkInstance = null;
-let knownEdgeKeys = null;
-let knownNodeLabels = null;
+let knownEdgeMap = null;   // Map<edgeKey, rel>
+let knownNodeLabels = null; // Set<label>
 
 const edgeKey = (rel) => `${rel.entity_1}|${rel.relation}|${rel.entity_2}`;
 
@@ -46,6 +46,17 @@ async function renderGraph(highlightNew = false) {
       if (!nodeMap.has(rel.entity_2)) nodeMap.set(rel.entity_2, nodeId++);
     }
 
+    const currentNodeLabels = new Set(nodeMap.keys());
+    const currentEdgeMap = new Map(data.relations.map(rel => [edgeKey(rel), rel]));
+
+    // diff — co zniknęło
+    const removedNodes = knownNodeLabels
+      ? [...knownNodeLabels].filter(l => !currentNodeLabels.has(l))
+      : [];
+    const removedEdges = knownEdgeMap
+      ? [...knownEdgeMap.values()].filter(rel => !currentEdgeMap.has(edgeKey(rel)))
+      : [];
+
     const nodesData = [...nodeMap.entries()].map(([label, id]) => {
       const isNew = highlightNew && !knownNodeLabels?.has(label);
       return {
@@ -61,11 +72,11 @@ async function renderGraph(highlightNew = false) {
       };
     });
 
-    knownNodeLabels = new Set(nodeMap.keys());
+    knownNodeLabels = currentNodeLabels;
     const nodes = new vis.DataSet(nodesData);
 
     const edgesData = data.relations.map((rel, i) => {
-      const isNew = highlightNew && !knownEdgeKeys?.has(edgeKey(rel));
+      const isNew = highlightNew && !knownEdgeMap?.has(edgeKey(rel));
       return {
         id: i,
         from: nodeMap.get(rel.entity_1),
@@ -79,7 +90,7 @@ async function renderGraph(highlightNew = false) {
       };
     });
 
-    knownEdgeKeys = new Set(data.relations.map(edgeKey));
+    knownEdgeMap = currentEdgeMap;
     const edges = new vis.DataSet(edgesData);
 
     const options = {
@@ -118,12 +129,45 @@ async function renderGraph(highlightNew = false) {
     );
 
     if (highlightNew) {
+      // zielone — reset po timeoucie
       const newEdgeIds = edgesData.filter(e => e.color).map(e => e.id);
       const newNodeIds = nodesData.filter(n => n.color).map(n => n.id);
       if (newEdgeIds.length > 0 || newNodeIds.length > 0) {
         setTimeout(() => {
           if (newEdgeIds.length > 0) edges.update(newEdgeIds.map(id => ({ id, color: null, font: null })));
           if (newNodeIds.length > 0) nodes.update(newNodeIds.map(id => ({ id, color: null })));
+        }, NEW_EDGE_HIGHLIGHT_MS);
+      }
+
+      // czerwone — phantom usunięte węzły i krawędzie
+      if (removedNodes.length > 0 || removedEdges.length > 0) {
+        const allNodeIdMap = new Map(nodeMap);
+        const phantomNodeItems = removedNodes.map(label => {
+          const phantomId = "ph_" + label;
+          allNodeIdMap.set(label, phantomId);
+          return {
+            id: phantomId,
+            label,
+            color: { background: "#ef4444", border: "#f87171", highlight: { background: "#f87171", border: "#fca5a5" } },
+          };
+        });
+        const phantomEdgeItems = removedEdges.map(rel => ({
+          id: "ph_" + edgeKey(rel),
+          from: allNodeIdMap.get(rel.entity_1),
+          to: allNodeIdMap.get(rel.entity_2),
+          label: rel.relation,
+          arrows: "to",
+          dashes: true,
+          color: { color: "#ef4444", highlight: "#f87171" },
+          font: { color: "#e5e5e5", size: 11, align: "middle", strokeWidth: 0, background: "#2d1515" },
+        }));
+
+        if (phantomNodeItems.length > 0) nodes.add(phantomNodeItems);
+        if (phantomEdgeItems.length > 0) edges.add(phantomEdgeItems);
+
+        setTimeout(() => {
+          edges.remove(phantomEdgeItems.map(e => e.id));
+          nodes.remove(phantomNodeItems.map(n => n.id));
         }, NEW_EDGE_HIGHLIGHT_MS);
       }
     }
@@ -354,7 +398,7 @@ clearGraphBtn.addEventListener("click", async () => {
       networkInstance.destroy();
       networkInstance = null;
     }
-    knownEdgeKeys = null;
+    knownEdgeMap = null;
     knownNodeLabels = null;
 
   } catch (err) {
