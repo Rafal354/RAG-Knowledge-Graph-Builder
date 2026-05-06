@@ -189,7 +189,7 @@ async function fetchGraphVersion() {
 
 async function pollForGraphUpdate(versionBefore) {
   const INTERVAL_MS = 1500;
-  const TIMEOUT_MS = 60000;
+  const TIMEOUT_MS = 180000;
   const started = Date.now();
 
   setStatus("Article saved. Waiting for graph update...", "info");
@@ -211,6 +211,28 @@ async function pollForGraphUpdate(versionBefore) {
       }
     }, INTERVAL_MS);
   });
+}
+
+async function fetchLocalModels() {
+  const group = document.getElementById("local-models-group");
+  try {
+    const res = await fetch(`${API_BASE_URL}/local-models`);
+    const data = await res.json();
+    group.innerHTML = "";
+    if (data.models && data.models.length > 0) {
+      data.models.forEach(modelId => {
+        const opt = document.createElement("option");
+        opt.value = `local:${modelId}`;
+        opt.textContent = modelId;
+        group.appendChild(opt);
+      });
+    } else {
+      group.innerHTML = '<option disabled value="">Not available</option>';
+    }
+  } catch (err) {
+    console.error("Failed to fetch local models:", err);
+    group.innerHTML = '<option disabled value="">Not available</option>';
+  }
 }
 
 async function fetchCurrentModel() {
@@ -235,7 +257,7 @@ modelSelect.addEventListener("change", async () => {
   }
 });
 
-fetchCurrentModel();
+fetchLocalModels().then(fetchCurrentModel);
 renderGraph();
 
 // na start blokujemy przycisk

@@ -37,7 +37,6 @@ class KnowledgeBaseService:
 
     def _update_from_article(self, title: str, text: str, is_new: bool, model: str) -> None:
         try:
-            llm = init_chat_model(model)
             if is_new:
                 prompt = self.prompt_service.build_prompt("new_graph", title=title, text=text)
             else:
@@ -47,9 +46,20 @@ class KnowledgeBaseService:
             logger.info("Prompt: %s", prompt)
 
             if settings.openai_request:
-                response = llm.invoke(prompt)
-                logger.info("Response (LLM): %s", response)
-                response_to_return = response.content.strip()
+                if model.startswith("local:"):
+                    from openai import OpenAI
+                    client = OpenAI(base_url="http://localhost:1234/v1", api_key="lm-studio")
+                    completion = client.chat.completions.create(
+                        model=model[len("local:"):],
+                        messages=[{"role": "user", "content": prompt}],
+                    )
+                    logger.info("Response (LM Studio): %s", completion)
+                    response_to_return = completion.choices[0].message.content.strip()
+                else:
+                    llm = init_chat_model(model)
+                    response = llm.invoke(prompt)
+                    logger.info("Response (LLM): %s", response)
+                    response_to_return = response.content.strip()
             else:
                 mock = """
                         [ENTITIES]
@@ -67,7 +77,10 @@ class KnowledgeBaseService:
             logger.info("Response: %s", response_to_return)
 
             self.graph_service.save_graph(response_to_return)
-            self.neo4j_service.push_graph(self.graph_service.get_latest_graph())
+            try:
+                self.neo4j_service.push_graph(self.graph_service.get_latest_graph())
+            except Exception:
+                logger.warning("Neo4j unavailable — skipping graph visualization update")
         except Exception:
             logger.exception("Failed to update knowledge base from article '%s'", title)
 
