@@ -406,6 +406,32 @@ button:disabled {
   padding: 16px 0;
 }
 
+.graph-item-delete {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+  user-select: none;
+}
+
+.graph-item:hover .graph-item-delete {
+  opacity: 1;
+}
+
+.graph-item-delete:hover {
+  color: var(--error) !important;
+  background: var(--error-bg) !important;
+  opacity: 1;
+}
+
 /* ── Graph section ── */
 
 #graph-section {

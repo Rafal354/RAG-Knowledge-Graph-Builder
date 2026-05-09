@@ -95,6 +95,15 @@ class GraphRepository:
                 .first()
             )
 
+    def delete_graph(self, graph_id: int) -> bool:
+        with SessionLocal() as session:
+            graph = session.query(GraphEntity).filter(GraphEntity.id == graph_id).first()
+            if graph is None:
+                return False
+            session.delete(graph)
+            session.commit()
+            return True
+
     @staticmethod
     def _map_to_details(graph: GraphEntity | None) -> GraphDetails | None:
         if graph is None:

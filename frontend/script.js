@@ -285,7 +285,8 @@ async function fetchGraphList() {
       `<span style="width:84px;flex-shrink:0">Date</span>` +
       `<span style="flex:1">Article</span>` +
       `<span style="width:100px;flex-shrink:0">Model</span>` +
-      `<span style="width:28px;text-align:right;flex-shrink:0">#</span>`;
+      `<span style="width:28px;text-align:right;flex-shrink:0">#</span>` +
+      `<span style="width:16px;flex-shrink:0"></span>`;
     container.appendChild(header);
 
     nonEmpty.forEach((g, index) => {
@@ -305,7 +306,8 @@ async function fetchGraphList() {
         `<span class="graph-item-meta">${formatGraphDate(g.created_at)}</span>` +
         `<span class="graph-item-title">${g.title ?? "—"}</span>` +
         `<span class="graph-item-model">${modelLabel}</span>` +
-        `<span class="graph-item-count nonzero">${g.relation_count}</span>`;
+        `<span class="graph-item-count nonzero">${g.relation_count}</span>` +
+        `<span class="graph-item-delete" role="button" title="Delete" data-id="${g.graph_id}">&times;</span>`;
 
       item.addEventListener("click", () => {
         activeGraphId = g.graph_id;
@@ -314,6 +316,25 @@ async function fetchGraphList() {
         );
         setStatus(`v${g.version} · ${formatGraphDate(g.created_at)} · ${g.relation_count} relations`, "info");
         renderGraph(false, g.graph_id);
+      });
+
+      item.querySelector(".graph-item-delete").addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (!confirm(`Delete v${g.version} — ${g.title ?? "untitled"}?`)) return;
+        const wasActive = activeGraphId === g.graph_id;
+        try {
+          const res = await fetch(`${API_BASE_URL}/graphs/${g.graph_id}`, { method: "DELETE" });
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          if (wasActive) {
+            activeGraphId = null;
+            knownEdgeMap = null;
+            knownNodeLabels = null;
+          }
+          await fetchGraphList();
+          if (wasActive) renderGraph(false);
+        } catch (err) {
+          setStatus("Error deleting graph: " + err.message, "error");
+        }
       });
 
       container.appendChild(item);

@@ -41,3 +41,11 @@ async def get_graph(graph_id: int):
 @router.delete("/graphs/clean", status_code=204)
 async def clean_graph():
     knowledge_base_service.clear_knowledge_base()
+
+
+@router.delete("/graphs/{graph_id}", status_code=204)
+async def delete_graph(graph_id: int):
+    deleted = _graph_service.delete_graph(graph_id)
+    if not deleted:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Graph not found")
