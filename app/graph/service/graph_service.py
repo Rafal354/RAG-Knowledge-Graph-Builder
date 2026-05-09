@@ -1,6 +1,6 @@
 import logging
 
-from app.graph.model.graph import GraphDetails
+from app.graph.model.graph import GraphDetails, GraphSummary
 from app.graph.repository.graph_repository import GraphRepository
 
 logger = logging.getLogger(__name__)
@@ -10,14 +10,17 @@ class GraphService:
     def __init__(self, graph_repository: GraphRepository) -> None:
         self.graph_repository = graph_repository
 
-    def save_graph(self, llm_output: str) -> GraphDetails:
+    def save_graph(self, llm_output: str, title: str | None = None, model: str | None = None) -> GraphDetails:
         relations = self._parse_relations(llm_output)
         logger.info("Relations: %s", relations)
-        return self.graph_repository.save_graph(relations)
+        return self.graph_repository.save_graph(relations, title=title, model=model)
 
     def get_latest_graph_text(self) -> str:
         latest_graph = self.graph_repository.get_latest_graph()
         return self.build_graph_text(latest_graph)
+
+    def get_all_graphs(self) -> list[GraphSummary]:
+        return self.graph_repository.get_all_graphs()
 
     def get_latest_graph(self) -> GraphDetails | None:
         return self.graph_repository.get_latest_graph()

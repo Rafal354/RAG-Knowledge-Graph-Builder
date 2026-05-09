@@ -22,19 +22,30 @@ const NEW_EDGE_HIGHLIGHT_MS = 15000;
 let networkInstance = null;
 let knownEdgeMap = null;   // Map<edgeKey, rel>
 let knownNodeLabels = null; // Set<label>
+let activeGraphId = null;  // null = always latest
 
 const edgeKey = (rel) => `${rel.entity_1}|${rel.relation}|${rel.entity_2}`;
 
-async function renderGraph(highlightNew = false) {
+async function renderGraph(highlightNew = false, graphId = null) {
   try {
-    const res = await fetch(`${API_BASE_URL}/graphs`);
+    const url = graphId != null
+      ? `${API_BASE_URL}/graphs/${graphId}`
+      : `${API_BASE_URL}/graphs`;
+    const res = await fetch(url);
     if (!res.ok) return;
     const data = await res.json();
 
     const graphSection = document.getElementById("graph-section");
 
     if (!data || !data.relations || data.relations.length === 0) {
-      graphSection.style.display = "none";
+      if (graphId != null) {
+        graphSection.style.display = "block";
+        if (networkInstance) { networkInstance.destroy(); networkInstance = null; }
+        document.getElementById("graph-container").innerHTML =
+          "<div style='display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:13px;'>This version has no relations</div>";
+      } else {
+        graphSection.style.display = "none";
+      }
       return;
     }
 
@@ -206,7 +217,9 @@ async function pollForGraphUpdate(versionBefore) {
       const version = await fetchGraphVersion();
       if (version !== null && version !== versionBefore) {
         clearInterval(interval);
+        activeGraphId = null;
         setStatus(`Graph updated to version ${version}.`, "ok");
+        await fetchGraphList();
         resolve();
       }
     }, INTERVAL_MS);
@@ -235,6 +248,81 @@ async function fetchLocalModels() {
   }
 }
 
+function formatGraphDate(isoStr) {
+  const dt = new Date(isoStr);
+  const day = String(dt.getDate()).padStart(2, "0");
+  const month = String(dt.getMonth() + 1).padStart(2, "0");
+  const hour = String(dt.getHours()).padStart(2, "0");
+  const min = String(dt.getMinutes()).padStart(2, "0");
+  return `${day}.${month} ${hour}:${min}`;
+}
+
+async function fetchGraphList() {
+  const container = document.getElementById("graph-history");
+  try {
+    const res = await fetch(`${API_BASE_URL}/graphs/all`);
+    console.log("[graphs/all] status:", res.status);
+    if (!res.ok) {
+      container.innerHTML = '<div class="graph-history-empty">Unavailable</div>';
+      return;
+    }
+    const graphs = await res.json();
+    console.log("[graphs/all] data:", graphs);
+
+    const nonEmpty = graphs ? graphs.filter(g => g.relation_count > 0) : [];
+
+    container.innerHTML = "";
+
+    if (nonEmpty.length === 0) {
+      container.innerHTML = '<div class="graph-history-empty">No graphs yet</div>';
+      return;
+    }
+
+    const header = document.createElement("div");
+    header.className = "graph-history-header";
+    header.innerHTML =
+      `<span style="width:40px;flex-shrink:0">Ver.</span>` +
+      `<span style="width:84px;flex-shrink:0">Date</span>` +
+      `<span style="flex:1">Article</span>` +
+      `<span style="width:100px;flex-shrink:0">Model</span>` +
+      `<span style="width:28px;text-align:right;flex-shrink:0">#</span>`;
+    container.appendChild(header);
+
+    nonEmpty.forEach((g, index) => {
+      const isActive = activeGraphId != null
+        ? g.graph_id === activeGraphId
+        : index === 0;
+
+      const item = document.createElement("div");
+      item.className = "graph-item" + (isActive ? " active" : "");
+      item.dataset.graphId = g.graph_id;
+
+      const modelLabel = g.model
+        ? g.model.replace(/^local:/, "").split("/").pop()
+        : "—";
+      item.innerHTML =
+        `<span class="graph-item-version">v${g.version}</span>` +
+        `<span class="graph-item-meta">${formatGraphDate(g.created_at)}</span>` +
+        `<span class="graph-item-title">${g.title ?? "—"}</span>` +
+        `<span class="graph-item-model">${modelLabel}</span>` +
+        `<span class="graph-item-count nonzero">${g.relation_count}</span>`;
+
+      item.addEventListener("click", () => {
+        activeGraphId = g.graph_id;
+        document.querySelectorAll(".graph-item").forEach(el =>
+          el.classList.toggle("active", parseInt(el.dataset.graphId) === activeGraphId)
+        );
+        setStatus(`v${g.version} · ${formatGraphDate(g.created_at)} · ${g.relation_count} relations`, "info");
+        renderGraph(false, g.graph_id);
+      });
+
+      container.appendChild(item);
+    });
+  } catch (err) {
+    console.error("Failed to fetch graph list:", err);
+  }
+}
+
 async function fetchCurrentModel() {
   try {
     const res = await fetch(`${API_BASE_URL}/model`);
@@ -258,6 +346,7 @@ modelSelect.addEventListener("change", async () => {
 });
 
 fetchLocalModels().then(fetchCurrentModel);
+fetchGraphList();
 renderGraph();
 
 // na start blokujemy przycisk
@@ -378,6 +467,9 @@ sendBtn.addEventListener("click", async () => {
     console.error(err);
     setStatus("Error processing request: " + err.message, "error");
   } finally {
+    currentText = "";
+    currentFileName = "";
+    fileInput.value = "";
     sendBtn.disabled = true;
     sendBtn.textContent = "Send";
   }
@@ -414,8 +506,10 @@ clearGraphBtn.addEventListener("click", async () => {
     fileInput.value = "";
     sendBtn.disabled = true;
 
+    activeGraphId = null;
     setStatus("Knowledge graph deleted", "ok");
     document.getElementById("graph-section").style.display = "none";
+    fetchGraphList();
     if (networkInstance) {
       networkInstance.destroy();
       networkInstance = null;

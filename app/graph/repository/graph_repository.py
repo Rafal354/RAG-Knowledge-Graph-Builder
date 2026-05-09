@@ -3,14 +3,14 @@ import logging
 from sqlalchemy.orm import selectinload
 
 from app.config.database import SessionLocal
-from app.graph.model.graph import GraphDetails
+from app.graph.model.graph import GraphDetails, GraphSummary
 from app.graph.model.graph_entity import GraphEntity, GraphRelationEntity
 
 logger = logging.getLogger(__name__)
 
 
 class GraphRepository:
-    def save_graph(self, relations: list[tuple[str, str, str]]) -> GraphDetails:
+    def save_graph(self, relations: list[tuple[str, str, str]], title: str | None = None, model: str | None = None) -> GraphDetails:
         with SessionLocal() as session:
             try:
                 latest_version_row = (
@@ -22,7 +22,7 @@ class GraphRepository:
 
                 logger.info(f"Next graph version: {next_version}")
 
-                graph = GraphEntity(version=next_version)
+                graph = GraphEntity(version=next_version, title=title, model=model)
                 session.add(graph)
                 session.flush()
 
@@ -65,6 +65,26 @@ class GraphRepository:
                 .order_by(GraphEntity.version.desc())
                 .first()
             )
+
+    def get_all_graphs(self) -> list[GraphSummary]:
+        with SessionLocal() as session:
+            graphs = (
+                session.query(GraphEntity)
+                .options(selectinload(GraphEntity.relations))
+                .order_by(GraphEntity.version.desc())
+                .all()
+            )
+            return [
+                GraphSummary(
+                    graph_id=g.id,
+                    version=g.version,
+                    created_at=g.created_at.isoformat(),
+                    relation_count=len(g.relations),
+                    title=g.title,
+                    model=g.model,
+                )
+                for g in graphs
+            ]
 
     def get_graph(self, graph_id: int) -> GraphEntity | None:
         with SessionLocal() as session:

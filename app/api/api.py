@@ -20,6 +20,11 @@ ARTICLE_NOT_FOUND = "Article not found"
 
 def startup_event():
     Base.metadata.create_all(bind=engine)
+    with engine.connect() as conn:
+        from sqlalchemy import text
+        conn.execute(text("ALTER TABLE graphs ADD COLUMN IF NOT EXISTS title TEXT"))
+        conn.execute(text("ALTER TABLE graphs ADD COLUMN IF NOT EXISTS model TEXT"))
+        conn.commit()
     global neo4j_service
     neo4j_service = Neo4jService(
         uri=settings.neo4j_uri,

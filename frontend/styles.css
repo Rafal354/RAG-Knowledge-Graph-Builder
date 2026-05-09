@@ -271,6 +271,141 @@ button:disabled {
   content: "ℹ";
 }
 
+/* ── Graph history ── */
+
+#history-section {
+  margin-top: 32px;
+}
+
+#history-section h2 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+#graph-history {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.graph-history-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  height: 28px;
+  background: var(--bg-lighter);
+  border-bottom: 1px solid var(--border);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.graph-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  height: 34px;
+  border-left: 3px solid transparent;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s;
+  flex-shrink: 0;
+}
+
+.graph-item:last-child {
+  border-bottom: none;
+}
+
+.graph-item:hover {
+  background: var(--bg-lighter);
+}
+
+.graph-item.active {
+  border-left-color: var(--accent);
+  background: #162032;
+}
+
+.graph-item.graph-empty {
+  opacity: 0.45;
+}
+
+.graph-item-version {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-light);
+  width: 40px;
+  flex-shrink: 0;
+}
+
+.graph-item.active .graph-item-version {
+  color: white;
+}
+
+.graph-item-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  width: 84px;
+  flex-shrink: 0;
+}
+
+.graph-item-title {
+  flex: 1;
+  font-size: 12px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.graph-item-model {
+  width: 100px;
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.graph-item-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.graph-item-count.nonzero {
+  color: var(--accent-light);
+}
+
+.graph-item.active .graph-item-count {
+  color: var(--accent-light);
+}
+
+.graph-history-empty {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 16px 0;
+}
+
 /* ── Graph section ── */
 
 #graph-section {

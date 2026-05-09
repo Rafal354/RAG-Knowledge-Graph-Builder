@@ -23,6 +23,15 @@ async def get_latest_graph():
     return _graph_service.get_latest_graph()
 
 
+@router.get("/graphs/all", status_code=200)
+async def get_all_graphs():
+    try:
+        return _graph_service.get_all_graphs()
+    except Exception:
+        logger.exception("Failed to fetch graph list")
+        return []
+
+
 @router.get("/graphs/{graph_id}", status_code=200)  ## response_model=GraphDetails | None
 async def get_graph(graph_id: int):
     logger.info("Getting graph with id=%s", graph_id)

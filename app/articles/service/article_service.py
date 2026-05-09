@@ -13,9 +13,8 @@ class ArticleService:
         self.repo = repo
 
     def add_article(self, req: AddArticleRequest) -> ArticleDetails:
-        is_new = not self.repo.list_articles()
         article_details = self.repo.save_article(req.title, req.text)
-        knowledge_base_service.update_from_request_async(req, is_new)
+        knowledge_base_service.update_from_request_async(req)
         return article_details
 
     def list_articles(self) -> List[ArticleDetails]:

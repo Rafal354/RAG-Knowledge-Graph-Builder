@@ -32,15 +32,15 @@ class KnowledgeBaseService:
         logger.info("Switching model to: %s", model)
         self.current_model = model
 
-    def update_from_request_async(self, req: AddArticleRequest, is_new: bool) -> None:
-        self.executor.submit(self._update_from_article, req.title, req.text, is_new, self.current_model)
+    def update_from_request_async(self, req: AddArticleRequest) -> None:
+        self.executor.submit(self._update_from_article, req.title, req.text, self.current_model)
 
-    def _update_from_article(self, title: str, text: str, is_new: bool, model: str) -> None:
+    def _update_from_article(self, title: str, text: str, model: str) -> None:
         try:
-            if is_new:
+            graph_text = self.graph_service.get_latest_graph_text()
+            if not graph_text or graph_text.strip() == "[RELATIONS]":
                 prompt = self.prompt_service.build_prompt("new_graph", title=title, text=text)
             else:
-                graph_text = self.graph_service.get_latest_graph_text()
                 prompt = self.prompt_service.build_prompt("existing_graph", title=title, text=text, graph=graph_text)
 
             logger.info("Prompt: %s", prompt)
@@ -48,7 +48,7 @@ class KnowledgeBaseService:
             if settings.openai_request:
                 if model.startswith("local:"):
                     from openai import OpenAI
-                    client = OpenAI(base_url="http://localhost:1234/v1", api_key="lm-studio")
+                    client = OpenAI(base_url="http://localhost:1234/v1", api_key="lm-studio", timeout=600.0)
                     completion = client.chat.completions.create(
                         model=model[len("local:"):],
                         messages=[{"role": "user", "content": prompt}],
@@ -56,7 +56,7 @@ class KnowledgeBaseService:
                     logger.info("Response (LM Studio): %s", completion)
                     response_to_return = completion.choices[0].message.content.strip()
                 else:
-                    llm = init_chat_model(model)
+                    llm = init_chat_model(model, timeout=600)
                     response = llm.invoke(prompt)
                     logger.info("Response (LLM): %s", response)
                     response_to_return = response.content.strip()
@@ -76,7 +76,7 @@ class KnowledgeBaseService:
 
             logger.info("Response: %s", response_to_return)
 
-            self.graph_service.save_graph(response_to_return)
+            self.graph_service.save_graph(response_to_return, title=title, model=model)
             try:
                 self.neo4j_service.push_graph(self.graph_service.get_latest_graph())
             except Exception:
@@ -93,7 +93,10 @@ class KnowledgeBaseService:
     def clear_knowledge_base(self) -> None:
         logger.info("Clearing knowledge base")
         self.graph_service.save_graph("")
-        self.neo4j_service.clean_database()
+        try:
+            self.neo4j_service.clean_database()
+        except Exception:
+            logger.warning("Neo4j unavailable — skipping Neo4j cleanup")
 
 
 knowledge_base_service = KnowledgeBaseService()

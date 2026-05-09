@@ -62,6 +62,7 @@ PROMPTS: Dict[str, Dict[str, str]] = {
             Zbuduj graf wiedzy na podstawie poniższego artykułu.
 
             Wyodrębnij encje i relacje występujące w tekście.
+            Encje i relacje zapisz w języku polskim.
 
             Zwróć wynik dokładnie w następującym formacie:
 
@@ -84,6 +85,8 @@ PROMPTS: Dict[str, Dict[str, str]] = {
             Wynik powinien przedstawiać scalony i spójny graf wiedzy oparty na:
             - istniejącym grafie
             - nowym artykule
+
+            Encje i relacje zapisz w języku polskim.
 
             Zwróć wynik dokładnie w następującym formacie:
 

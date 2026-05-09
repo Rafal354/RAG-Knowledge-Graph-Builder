@@ -3,6 +3,15 @@ from pydantic import BaseModel, Field
 from app.graph.model.graph_entity import GraphEntity
 
 
+class GraphSummary(BaseModel):
+    graph_id: int
+    version: int
+    created_at: str
+    relation_count: int
+    title: str | None = None
+    model: str | None = None
+
+
 class GraphRelationDetails(BaseModel):
     entity_1: str = Field(..., description="Source entity")
     relation: str = Field(..., description="Relation type")
