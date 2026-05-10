@@ -293,7 +293,12 @@ button:disabled {
   margin: 0;
 }
 
-.history-header button {
+.history-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.history-header-actions button {
   width: auto;
   padding: 4px 10px;
   font-size: 12px;
@@ -419,6 +424,31 @@ button:disabled {
   padding: 16px 0;
 }
 
+.graph-item-export {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+  user-select: none;
+}
+
+.graph-item:hover .graph-item-export {
+  opacity: 1;
+}
+
+.graph-item-export:hover {
+  color: var(--accent-light) !important;
+  background: #0f1f3d !important;
+}
+
 .graph-item-delete {
   flex: 0 0 16px;
   width: 16px;
@@ -445,6 +475,162 @@ button:disabled {
   opacity: 1;
 }
 
+/* ── Modal ── */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.modal {
+  background: var(--bg-light);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 28px;
+  width: 640px;
+  max-width: calc(100vw - 48px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h2 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.modal-close {
+  width: 28px !important;
+  height: 28px !important;
+  flex: 0 0 28px !important;
+  padding: 0 !important;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.modal-close:hover:not(:disabled) {
+  background: var(--bg-lighter) !important;
+  color: var(--text) !important;
+}
+
+.manual-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.manual-file-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.manual-file-label {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  background: var(--bg-lighter);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.manual-file-label:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+#manual-file-input {
+  display: none;
+}
+
+#manual-file-name {
+  font-size: 12px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.manual-fields input[type="text"] {
+  background: var(--bg-lighter);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  padding: 8px 10px;
+  outline: none;
+  width: 100%;
+}
+
+.manual-fields input[type="text"]:focus {
+  border-color: var(--accent);
+}
+
+.manual-fields textarea {
+  background: var(--bg-lighter);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 12px;
+  font-family: monospace;
+  padding: 8px 10px;
+  resize: vertical;
+  outline: none;
+  width: 100%;
+  line-height: 1.6;
+}
+
+.manual-fields textarea:focus {
+  border-color: var(--accent);
+}
+
+.manual-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.manual-actions button {
+  width: auto;
+  padding: 7px 16px;
+  font-size: 13px;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--bg-lighter) !important;
+  color: var(--text) !important;
+}
+
 /* ── Graph section ── */
 
 #graph-section {
@@ -452,14 +638,6 @@ button:disabled {
   margin-top: 40px;
 }
 
-#graph-section h2 {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 12px;
-}
 
 #graph-container {
   width: 100%;

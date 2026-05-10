@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Knowledge Graph Builder</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=12" />
   <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
 </head>
 <body>
@@ -53,6 +53,28 @@
     </div>
   </div>
 
+  <div id="manual-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Manual Graph Entry</h2>
+        <button id="manual-cancel-btn" class="modal-close" type="button">&times;</button>
+      </div>
+      <div class="manual-fields">
+        <input id="manual-title" type="text" placeholder="Title (e.g. my graph)" />
+        <div class="manual-file-row">
+          <label class="manual-file-label" for="manual-file-input">Load from .txt</label>
+          <input id="manual-file-input" type="file" accept=".txt" />
+          <span id="manual-file-name"></span>
+        </div>
+        <textarea id="manual-relations" rows="12" placeholder="One relation per line:&#10;Entity A -> relation -> Entity B&#10;Entity B -> other relation -> Entity C"></textarea>
+      </div>
+      <div class="manual-actions">
+        <button id="manual-save-btn" type="button">Save graph</button>
+        <button id="manual-cancel-btn2" type="button" class="btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <div id="graph-section">
     <h2>Knowledge Graph</h2>
     <div id="graph-container"></div>
@@ -61,11 +83,14 @@
   <div id="history-section">
     <div class="history-header">
       <h2>Graph History</h2>
-      <button id="load-latest-btn" type="button">Load latest</button>
+      <div class="history-header-actions">
+        <button id="manual-toggle-btn" type="button">+ Add manually</button>
+        <button id="load-latest-btn" type="button">Load latest</button>
+      </div>
     </div>
     <div id="graph-history"></div>
   </div>
 
-  <script src="script.js?v=9"></script>
+  <script src="script.js?v=15"></script>
 </body>
 </html>

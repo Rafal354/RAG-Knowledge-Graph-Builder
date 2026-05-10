@@ -1,6 +1,7 @@
 import logging
 
 from fastapi import APIRouter
+from pydantic import BaseModel
 
 from app.graph.repository.graph_repository import GraphRepository
 from app.graph.service.graph_service import GraphService
@@ -10,6 +11,17 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 _graph_service = GraphService(GraphRepository())
+
+
+class ManualGraphRequest(BaseModel):
+    title: str = "manual"
+    relations_text: str
+
+
+@router.post("/graphs/manual", status_code=201)
+async def create_manual_graph(request: ManualGraphRequest):
+    formatted = "[RELATIONS]\n" + request.relations_text
+    return _graph_service.save_graph(formatted, title=request.title, model="manual")
 
 
 @router.post("/graphs/{graph_id}", status_code=201)

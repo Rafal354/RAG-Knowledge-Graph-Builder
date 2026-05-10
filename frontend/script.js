@@ -13,6 +13,15 @@ const modelSelect = document.getElementById("model-select");
 const clearGraphBtn = document.getElementById("clear-graph-btn");
 const loadLatestBtn = document.getElementById("load-latest-btn");
 const statusEl = document.getElementById("status");
+const manualToggleBtn = document.getElementById("manual-toggle-btn");
+const manualModal = document.getElementById("manual-modal");
+const manualTitleInput = document.getElementById("manual-title");
+const manualRelationsInput = document.getElementById("manual-relations");
+const manualSaveBtn = document.getElementById("manual-save-btn");
+const manualCancelBtn = document.getElementById("manual-cancel-btn");
+const manualCancelBtn2 = document.getElementById("manual-cancel-btn2");
+const manualFileInput = document.getElementById("manual-file-input");
+const manualFileName = document.getElementById("manual-file-name");
 
 let currentText = "";
 let currentFileName = "";
@@ -287,6 +296,7 @@ async function fetchGraphList() {
       `<span style="flex:1">Article</span>` +
       `<span style="width:100px;flex-shrink:0">Model</span>` +
       `<span style="width:28px;text-align:right;flex-shrink:0">relations</span>` +
+      `<span style="width:16px;flex-shrink:0"></span>` +
       `<span style="width:16px;flex-shrink:0"></span>`;
     container.appendChild(header);
 
@@ -308,6 +318,7 @@ async function fetchGraphList() {
         `<span class="graph-item-title">${g.title ?? "—"}</span>` +
         `<span class="graph-item-model">${modelLabel}</span>` +
         `<span class="graph-item-count nonzero">${g.relation_count}</span>` +
+        `<span class="graph-item-export" role="button" title="Export .txt" data-id="${g.graph_id}">&#8595;</span>` +
         `<span class="graph-item-delete" role="button" title="Delete" data-id="${g.graph_id}">&times;</span>`;
 
       item.addEventListener("click", () => {
@@ -317,6 +328,25 @@ async function fetchGraphList() {
         );
         setStatus(`v${g.version} · ${formatGraphDate(g.created_at)} · ${g.relation_count} relations`, "info");
         renderGraph(false, g.graph_id);
+      });
+
+      item.querySelector(".graph-item-export").addEventListener("click", async (e) => {
+        e.stopPropagation();
+        try {
+          const res = await fetch(`${API_BASE_URL}/graphs/${g.graph_id}`);
+          if (!res.ok) return;
+          const data = await res.json();
+          if (!data?.relations?.length) return;
+          const lines = data.relations.map(r => `${r.entity_1} -> ${r.relation} -> ${r.entity_2}`);
+          const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = (g.title ?? `graph_v${g.version}`) + ".txt";
+          a.click();
+          URL.revokeObjectURL(a.href);
+        } catch (err) {
+          setStatus("Export failed: " + err.message, "error");
+        }
       });
 
       item.querySelector(".graph-item-delete").addEventListener("click", async (e) => {
@@ -364,6 +394,73 @@ modelSelect.addEventListener("change", async () => {
     });
   } catch (err) {
     console.error("Failed to set model:", err);
+  }
+});
+
+function closeManualModal() {
+  manualModal.classList.add("hidden");
+  manualTitleInput.value = "";
+  manualRelationsInput.value = "";
+  manualFileInput.value = "";
+  manualFileName.textContent = "";
+}
+
+
+manualFileInput.addEventListener("change", () => {
+  const file = manualFileInput.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    manualRelationsInput.value = e.target.result.trim();
+    manualFileName.textContent = file.name;
+    if (!manualTitleInput.value.trim()) {
+      manualTitleInput.value = file.name.replace(/\.txt$/i, "").trim();
+    }
+  };
+  reader.readAsText(file, "utf-8");
+});
+
+manualToggleBtn.addEventListener("click", () => manualModal.classList.remove("hidden"));
+manualCancelBtn.addEventListener("click", closeManualModal);
+manualCancelBtn2.addEventListener("click", closeManualModal);
+manualModal.addEventListener("click", (e) => { if (e.target === manualModal) closeManualModal(); });
+
+manualSaveBtn.addEventListener("click", async () => {
+  const relationsText = manualRelationsInput.value.trim();
+  if (!relationsText) {
+    setStatus("Enter at least one relation", "error");
+    return;
+  }
+
+  manualSaveBtn.disabled = true;
+  manualSaveBtn.textContent = "Saving...";
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/graphs/manual`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: manualTitleInput.value.trim() || "manual",
+        relations_text: relationsText,
+      }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.detail || "HTTP " + res.status);
+    }
+
+    const saved = await res.json();
+    activeGraphId = saved.graph_id;
+    closeManualModal();
+    setStatus(`Graph v${saved.version} saved (${saved.relations.length} relations)`, "ok");
+    await fetchGraphList();
+    await renderGraph(false, saved.graph_id);
+  } catch (err) {
+    setStatus("Error saving graph: " + err.message, "error");
+  } finally {
+    manualSaveBtn.disabled = false;
+    manualSaveBtn.textContent = "Save graph";
   }
 });
 
