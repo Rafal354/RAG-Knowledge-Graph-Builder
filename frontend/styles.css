@@ -277,13 +277,26 @@ button:disabled {
   margin-top: 32px;
 }
 
-#history-section h2 {
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.history-header h2 {
   font-size: 15px;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 12px;
+  margin: 0;
+}
+
+.history-header button {
+  width: auto;
+  padding: 4px 10px;
+  font-size: 12px;
 }
 
 #graph-history {

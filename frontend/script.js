@@ -11,6 +11,7 @@ const titleEl = document.getElementById("title");
 const sendBtn = document.getElementById("send-btn");
 const modelSelect = document.getElementById("model-select");
 const clearGraphBtn = document.getElementById("clear-graph-btn");
+const loadLatestBtn = document.getElementById("load-latest-btn");
 const statusEl = document.getElementById("status");
 
 let currentText = "";
@@ -285,7 +286,7 @@ async function fetchGraphList() {
       `<span style="width:84px;flex-shrink:0">Date</span>` +
       `<span style="flex:1">Article</span>` +
       `<span style="width:100px;flex-shrink:0">Model</span>` +
-      `<span style="width:28px;text-align:right;flex-shrink:0">#</span>` +
+      `<span style="width:28px;text-align:right;flex-shrink:0">relations</span>` +
       `<span style="width:16px;flex-shrink:0"></span>`;
     container.appendChild(header);
 
@@ -364,6 +365,14 @@ modelSelect.addEventListener("change", async () => {
   } catch (err) {
     console.error("Failed to set model:", err);
   }
+});
+
+loadLatestBtn.addEventListener("click", async () => {
+  activeGraphId = null;
+  knownEdgeMap = null;
+  knownNodeLabels = null;
+  await fetchGraphList();
+  await renderGraph(false);
 });
 
 fetchLocalModels().then(fetchCurrentModel);
