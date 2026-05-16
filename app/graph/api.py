@@ -50,6 +50,17 @@ async def get_graph(graph_id: int):
     return _graph_service.get_graph(graph_id)
 
 
+class PatchGraphRequest(BaseModel):
+    position: int
+
+
+@router.patch("/graphs/{graph_id}", status_code=204)
+async def patch_graph(graph_id: int, request: PatchGraphRequest):
+    from fastapi import HTTPException
+    if not _graph_service.update_graph_position(graph_id, request.position):
+        raise HTTPException(status_code=404, detail="Graph not found")
+
+
 @router.delete("/graphs/clean", status_code=204)
 async def clean_graph():
     knowledge_base_service.clear_knowledge_base()

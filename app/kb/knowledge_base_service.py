@@ -22,17 +22,28 @@ class KnowledgeBaseService:
             os.environ["OPENAI_API_KEY"] = settings.openai_api_key
         if settings.google_api_key:
             os.environ["GOOGLE_API_KEY"] = settings.google_api_key
+        if settings.alibaba_api_key:
+            os.environ["ALIBABA_API_KEY"] = settings.alibaba_api_key
+        if settings.openrouter_api_key:
+            os.environ["OPENROUTER_API_KEY"] = settings.openrouter_api_key
         self.current_model: str = settings.llm_model
         self.prompt_service = PromptService()
         self.graph_service = GraphService(GraphRepository())
         self.executor = ThreadPoolExecutor(max_workers=4)
         self.neo4j_service: Neo4jService | None = None
+        self.last_error: str | None = None
+        self.processing: bool = False
 
     def set_model(self, model: str) -> None:
         logger.info("Switching model to: %s", model)
         self.current_model = model
 
+    def get_status(self) -> dict:
+        return {"processing": self.processing, "error": self.last_error}
+
     def update_from_request_async(self, req: AddArticleRequest) -> None:
+        self.last_error = None
+        self.processing = True
         self.executor.submit(self._update_from_article, req.title, req.text, self.current_model)
 
     def _update_from_article(self, title: str, text: str, model: str) -> None:
@@ -54,6 +65,33 @@ class KnowledgeBaseService:
                         messages=[{"role": "user", "content": prompt}],
                     )
                     logger.info("Response (LM Studio): %s", completion)
+                    response_to_return = completion.choices[0].message.content.strip()
+                elif model.startswith("qwen"):
+                    from openai import OpenAI
+                    client = OpenAI(
+                        base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+                        api_key=settings.alibaba_api_key,
+                        timeout=600.0,
+                    )
+                    completion = client.chat.completions.create(
+                        model=model,
+                        messages=[{"role": "user", "content": prompt}],
+                        extra_body={"enable_thinking": False},
+                    )
+                    logger.info("Response (Alibaba): %s", completion)
+                    response_to_return = completion.choices[0].message.content.strip()
+                elif "/" in model:
+                    from openai import OpenAI
+                    client = OpenAI(
+                        base_url="https://openrouter.ai/api/v1",
+                        api_key=settings.openrouter_api_key,
+                        timeout=600.0,
+                    )
+                    completion = client.chat.completions.create(
+                        model=model,
+                        messages=[{"role": "user", "content": prompt}],
+                    )
+                    logger.info("Response (OpenRouter): %s", completion)
                     response_to_return = completion.choices[0].message.content.strip()
                 else:
                     llm = init_chat_model(model, timeout=600)
@@ -81,8 +119,11 @@ class KnowledgeBaseService:
                 self.neo4j_service.push_graph(self.graph_service.get_latest_graph())
             except Exception:
                 logger.warning("Neo4j unavailable — skipping graph visualization update")
-        except Exception:
+        except Exception as e:
+            self.last_error = str(e)
             logger.exception("Failed to update knowledge base from article '%s'", title)
+        finally:
+            self.processing = False
 
     def build_specific_version(self, graph_id: int) -> None:
         self.neo4j_service.push_graph(self.graph_service.get_graph(graph_id))

@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     anthropic_api_key: str | None = None
     google_api_key: str | None = None
+    alibaba_api_key: str | None = None
+    openrouter_api_key: str | None = None
     openai_request: bool = False
 
     postgres_host: str

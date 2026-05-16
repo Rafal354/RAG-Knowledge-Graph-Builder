@@ -1,5 +1,6 @@
 import logging
 
+from sqlalchemy import func
 from sqlalchemy.orm import selectinload
 
 from app.config.database import SessionLocal
@@ -20,9 +21,12 @@ class GraphRepository:
                 )
                 next_version = (latest_version_row[0] if latest_version_row else 0) + 1
 
-                logger.info(f"Next graph version: {next_version}")
+                max_position_row = session.query(func.max(GraphEntity.position)).scalar()
+                next_position = (max_position_row if max_position_row is not None else 0) + 1
 
-                graph = GraphEntity(version=next_version, title=title, model=model)
+                logger.info(f"Next graph version: {next_version}, position: {next_position}")
+
+                graph = GraphEntity(version=next_version, position=next_position, title=title, model=model)
                 session.add(graph)
                 session.flush()
 
@@ -78,6 +82,7 @@ class GraphRepository:
                 GraphSummary(
                     graph_id=g.id,
                     version=g.version,
+                    position=g.position,
                     created_at=g.created_at.isoformat(),
                     relation_count=len(g.relations),
                     title=g.title,
@@ -94,6 +99,15 @@ class GraphRepository:
                 .filter(GraphEntity.id == graph_id)
                 .first()
             )
+
+    def update_graph_position(self, graph_id: int, position: int) -> bool:
+        with SessionLocal() as session:
+            graph = session.query(GraphEntity).filter(GraphEntity.id == graph_id).first()
+            if graph is None:
+                return False
+            graph.position = position
+            session.commit()
+            return True
 
     def delete_graph(self, graph_id: int) -> bool:
         with SessionLocal() as session:

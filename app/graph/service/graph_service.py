@@ -28,6 +28,9 @@ class GraphService:
     def get_graph(self, graph_id: int) -> GraphDetails | None:
         return self.graph_repository.get_graph(graph_id)
 
+    def update_graph_position(self, graph_id: int, position: int) -> bool:
+        return self.graph_repository.update_graph_position(graph_id, position)
+
     def delete_graph(self, graph_id: int) -> bool:
         return self.graph_repository.delete_graph(graph_id)
 

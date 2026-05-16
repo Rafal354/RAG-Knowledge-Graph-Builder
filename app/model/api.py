@@ -27,6 +27,11 @@ async def set_model(request: ModelRequest):
     knowledge_base_service.set_model(request.model)
 
 
+@router.get("/status")
+async def get_status():
+    return knowledge_base_service.get_status()
+
+
 @router.get("/local-models")
 async def get_local_models():
     def _fetch():

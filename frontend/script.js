@@ -26,6 +26,7 @@ const manualFileName = document.getElementById("manual-file-name");
 let currentText = "";
 let currentFileName = "";
 let statusTimeout;
+let sortDirection = "desc";
 
 const NEW_EDGE_HIGHLIGHT_MS = 15000;
 
@@ -224,6 +225,19 @@ async function pollForGraphUpdate(versionBefore) {
         return;
       }
 
+      try {
+        const statusRes = await fetch(`${API_BASE_URL}/status`);
+        if (statusRes.ok) {
+          const status = await statusRes.json();
+          if (status.error) {
+            clearInterval(interval);
+            setStatus("Error: " + status.error, "error");
+            resolve();
+            return;
+          }
+        }
+      } catch {}
+
       const version = await fetchGraphVersion();
       if (version !== null && version !== versionBefore) {
         clearInterval(interval);
@@ -288,19 +302,29 @@ async function fetchGraphList() {
       return;
     }
 
+    const sorted = [...nonEmpty].sort((a, b) => {
+      const ap = a.position ?? Infinity, bp = b.position ?? Infinity;
+      if (ap !== bp) return sortDirection === "desc" ? bp - ap : ap - bp;
+      return sortDirection === "desc" ? b.version - a.version : a.version - b.version;
+    });
+
     const header = document.createElement("div");
     header.className = "graph-history-header";
     header.innerHTML =
-      `<span style="width:40px;flex-shrink:0">Ver.</span>` +
+      `<span class="graph-header-pos" style="width:36px;flex-shrink:0;cursor:pointer;user-select:none;text-align:right">Pos.</span>` +
       `<span style="width:84px;flex-shrink:0">Date</span>` +
       `<span style="flex:1">Article</span>` +
       `<span style="width:100px;flex-shrink:0">Model</span>` +
-      `<span style="width:28px;text-align:right;flex-shrink:0">relations</span>` +
+      `<span style="width:28px;text-align:right;flex-shrink:0">#</span>` +
       `<span style="width:16px;flex-shrink:0"></span>` +
       `<span style="width:16px;flex-shrink:0"></span>`;
+    header.querySelector(".graph-header-pos").addEventListener("click", () => {
+      sortDirection = sortDirection === "desc" ? "asc" : "desc";
+      fetchGraphList();
+    });
     container.appendChild(header);
 
-    nonEmpty.forEach((g, index) => {
+    sorted.forEach((g, index) => {
       const isActive = activeGraphId != null
         ? g.graph_id === activeGraphId
         : index === 0;
@@ -312,8 +336,9 @@ async function fetchGraphList() {
       const modelLabel = g.model
         ? g.model.replace(/^local:/, "").split("/").pop()
         : "—";
+      const posLabel = g.position ?? "—";
       item.innerHTML =
-        `<span class="graph-item-version">v${g.version}</span>` +
+        `<span class="graph-item-position" role="button" title="Click to set position">${posLabel}</span>` +
         `<span class="graph-item-meta">${formatGraphDate(g.created_at)}</span>` +
         `<span class="graph-item-title">${g.title ?? "—"}</span>` +
         `<span class="graph-item-model">${modelLabel}</span>` +
@@ -328,6 +353,40 @@ async function fetchGraphList() {
         );
         setStatus(`v${g.version} · ${formatGraphDate(g.created_at)} · ${g.relation_count} relations`, "info");
         renderGraph(false, g.graph_id);
+      });
+
+      item.querySelector(".graph-item-position").addEventListener("click", (e) => {
+        e.stopPropagation();
+        const span = e.currentTarget;
+        const input = document.createElement("input");
+        input.type = "number";
+        input.value = g.position ?? "";
+        input.className = "graph-item-position-input";
+        input.placeholder = "—";
+        span.replaceWith(input);
+        input.focus();
+        input.select();
+        const save = async () => {
+          const newPos = parseInt(input.value);
+          if (!isNaN(newPos) && newPos !== g.position) {
+            try {
+              const res = await fetch(`${API_BASE_URL}/graphs/${g.graph_id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ position: newPos }),
+              });
+              if (!res.ok) throw new Error("HTTP " + res.status);
+            } catch (err) {
+              setStatus("Failed to update position: " + err.message, "error");
+            }
+          }
+          await fetchGraphList();
+        };
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") { e.preventDefault(); save(); }
+          if (e.key === "Escape") input.replaceWith(span);
+        });
+        input.addEventListener("blur", save);
       });
 
       item.querySelector(".graph-item-export").addEventListener("click", async (e) => {

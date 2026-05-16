@@ -367,6 +367,46 @@ button:disabled {
   color: var(--accent-light);
   width: 40px;
   flex-shrink: 0;
+  cursor: pointer;
+}
+
+.graph-item-position {
+  width: 36px;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: right;
+  cursor: pointer;
+}
+
+.graph-item-position:hover {
+  color: var(--text);
+  text-decoration: underline dotted;
+}
+
+.graph-item-position-input {
+  width: 36px;
+  flex-shrink: 0;
+  background: var(--bg-lighter);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  color: var(--accent-light);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 4px;
+  outline: none;
+  text-align: right;
+}
+
+.graph-item-position-input::-webkit-outer-spin-button,
+.graph-item-position-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.graph-item-position-input[type="number"] {
+  -moz-appearance: textfield;
 }
 
 .graph-item.active .graph-item-version {

@@ -6,6 +6,7 @@ from app.graph.model.graph_entity import GraphEntity
 class GraphSummary(BaseModel):
     graph_id: int
     version: int
+    position: int | None = None
     created_at: str
     relation_count: int
     title: str | None = None
