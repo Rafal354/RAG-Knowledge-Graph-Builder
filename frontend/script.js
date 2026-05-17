@@ -619,10 +619,50 @@ evalRunBtn.addEventListener("click", async () => {
     });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
-    evalResults.innerHTML =
-      `<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">` +
-      `Graph: ${data.graph_relations} relations</div>` +
-      `<div style="font-size:13px;white-space:pre-wrap;line-height:1.7;color:var(--text);">${data.analysis}</div>`;
+
+    const pct = v => (v * 100).toFixed(1) + "%";
+    const metricColor = v => v >= 0.7 ? "var(--success)" : v >= 0.4 ? "var(--warning)" : "var(--error)";
+
+    const metricsHtml = `
+      <div style="display:flex;gap:12px;margin-bottom:16px;">
+        ${[["Precision", data.precision], ["Recall", data.recall], ["F1", data.f1]].map(([label, val]) => `
+          <div style="flex:1;background:var(--bg-lighter);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;">
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">${label}</div>
+            <div style="font-size:22px;font-weight:700;color:${metricColor(val)};">${pct(val)}</div>
+          </div>`).join("")}
+        <div style="flex:1;background:var(--bg-lighter);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;">
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Hallucinated</div>
+          <div style="font-size:22px;font-weight:700;color:${metricColor(1 - data.unsupported_count / data.graph_relations)};">${data.unsupported_count}/${data.graph_relations}</div>
+        </div>
+      </div>`;
+
+    const verdictsHtml = data.triple_verdicts.length ? `
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Triples</div>
+        <div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+          ${data.triple_verdicts.map(v => `
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:6px 10px;border-bottom:1px solid var(--border);font-size:12px;">
+              <span style="flex-shrink:0;color:${v.supported ? "var(--success)" : "var(--error)"};">${v.supported ? "✓" : "✕"}</span>
+              <span style="flex:1;color:var(--text);font-family:monospace;">${v.triple}</span>
+              ${v.comment ? `<span style="color:var(--text-muted);font-size:11px;max-width:200px;">${v.comment}</span>` : ""}
+            </div>`).join("")}
+        </div>
+      </div>` : "";
+
+    const missingHtml = data.missing_relations.length ? `
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Missing (${data.missing_count})</div>
+        <div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+          ${data.missing_relations.map(r => `
+            <div style="padding:6px 10px;border-bottom:1px solid var(--border);font-size:12px;color:var(--warning);font-family:monospace;">${r}</div>`).join("")}
+        </div>
+      </div>` : "";
+
+    const analysisHtml = `
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Analysis</div>
+      <div style="font-size:13px;white-space:pre-wrap;line-height:1.7;color:var(--text);">${data.analysis}</div>`;
+
+    evalResults.innerHTML = metricsHtml + verdictsHtml + missingHtml + analysisHtml;
   } catch (err) {
     evalResults.innerHTML = `<div style='color:var(--error);font-size:13px;'>Error: ${err.message}</div>`;
   } finally {
