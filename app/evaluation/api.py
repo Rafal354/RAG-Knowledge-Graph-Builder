@@ -4,6 +4,7 @@ import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from app.articles.repository.postgres_article_repository import PostgresArticleRepository
 from app.evaluation.evaluation_service import EvaluationResult, EvaluationService
 from app.evaluation.repository.evaluation_repository import EvaluationRepository
 from app.graph.repository.graph_repository import GraphRepository
@@ -13,20 +14,17 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 _graph_repository = GraphRepository()
+_article_repository = PostgresArticleRepository()
 _evaluation_service = EvaluationService()
 _evaluation_repository = EvaluationRepository()
 
 
 class EvaluateRequest(BaseModel):
     graph_id: int
-    text: str
-    prompt_key: str  # format: "default_en/new_graph"
     model: str = "claude-sonnet-4-6"
-
-
-class SaveEvaluationRequest(BaseModel):
-    result: EvaluationResult
-    prompt_key: str
+    # fallback fields — used only when the graph has no linked article / prompt
+    text: str | None = None
+    prompt_key: str | None = None
 
 
 class EvaluationSummary(BaseModel):
@@ -106,22 +104,31 @@ def delete_evaluation(evaluation_id: int):
         raise HTTPException(status_code=404, detail=f"Evaluation {evaluation_id} not found")
 
 
-@router.post("/evaluations/save", status_code=201)
-def save_evaluation(request: SaveEvaluationRequest):
-    _evaluation_repository.save(request.result, request.prompt_key)
-
-
 @router.post("/evaluate", response_model=EvaluationResult)
 async def evaluate(request: EvaluateRequest):
     graph = _graph_repository.get_graph(request.graph_id)
     if graph is None:
         raise HTTPException(status_code=404, detail=f"Graph {request.graph_id} not found")
 
-    parts = request.prompt_key.split("/", 1)
+    # resolve text
+    text = request.text
+    if not text:
+        if graph.article_id is None:
+            raise HTTPException(status_code=400, detail="Graph has no linked article. Provide text manually.")
+        article = _article_repository.get_article(graph.article_id)
+        if article is None:
+            raise HTTPException(status_code=404, detail=f"Linked article {graph.article_id} not found.")
+        text = article.text
+
+    # resolve prompt key
+    prompt_key = request.prompt_key or graph.prompt_key
+    if not prompt_key:
+        raise HTTPException(status_code=400, detail="Graph has no linked prompt. Provide prompt_key manually.")
+    parts = prompt_key.split("/", 1)
     if len(parts) != 2 or parts[0] not in PROMPTS or parts[1] not in PROMPTS[parts[0]]:
-        raise HTTPException(status_code=400, detail=f"Unknown prompt key: {request.prompt_key}")
+        raise HTTPException(status_code=400, detail=f"Unknown prompt key: {prompt_key}")
 
     prompt_template = PROMPTS[parts[0]][parts[1]]
-    result = await asyncio.to_thread(_evaluation_service.evaluate, graph, request.text, prompt_template, request.model)
-    await asyncio.to_thread(_evaluation_repository.save, result, request.prompt_key)
+    result = await asyncio.to_thread(_evaluation_service.evaluate, graph, text, prompt_template, request.model)
+    await asyncio.to_thread(_evaluation_repository.save, result, prompt_key)
     return result

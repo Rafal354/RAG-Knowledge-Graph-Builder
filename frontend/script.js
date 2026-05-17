@@ -658,31 +658,27 @@ async function openEvalModal() {
   evalResults.innerHTML = "";
   evalModal.classList.remove("hidden");
 
-  const [graphsRes, promptsRes] = await Promise.all([
-    fetch(`${API_BASE_URL}/graphs/all`),
-    fetch(`${API_BASE_URL}/prompts`),
-  ]);
-  graphListCache = ((await graphsRes.json()) || []).filter(g => g.relation_count > 0);
-  const prompts = await promptsRes.json();
+  const graphsRes = await fetch(`${API_BASE_URL}/graphs/all`);
+  graphListCache = ((await graphsRes.json()) || [])
+    .filter(g => g.relation_count > 0 && g.article_id && g.prompt_key);
 
   const selGraph = document.getElementById("eval-graph-a");
   selGraph.innerHTML = "";
-  graphListCache.forEach(g => {
-    const opt = document.createElement("option");
-    opt.value = g.graph_id;
-    const modelLabel = g.model ? g.model.replace(/^local:/, "").split("/").pop() : "—";
-    opt.textContent = `[${g.position ?? "—"}] ${g.title ?? "—"} · ${modelLabel}`;
-    selGraph.appendChild(opt);
-  });
 
-  const selPrompt = document.getElementById("eval-prompt");
-  selPrompt.innerHTML = "";
-  (prompts || []).forEach(p => {
+  if (graphListCache.length === 0) {
     const opt = document.createElement("option");
-    opt.value = p.key;
-    opt.textContent = p.label;
-    selPrompt.appendChild(opt);
-  });
+    opt.disabled = true;
+    opt.textContent = "No graphs with linked article available";
+    selGraph.appendChild(opt);
+  } else {
+    graphListCache.forEach(g => {
+      const opt = document.createElement("option");
+      opt.value = g.graph_id;
+      const modelLabel = g.model ? g.model.replace(/^local:/, "").split("/").pop() : "—";
+      opt.textContent = `[${g.position ?? "—"}] ${g.title ?? "—"} · ${modelLabel}`;
+      selGraph.appendChild(opt);
+    });
+  }
 
   const selEvalModel = document.getElementById("eval-model");
   selEvalModel.innerHTML = document.getElementById("model-select").innerHTML;
@@ -692,15 +688,6 @@ async function openEvalModal() {
 
 compareBtn.addEventListener("click", openEvalModal);
 
-document.getElementById("eval-file-input").addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev) => { document.getElementById("eval-text").value = ev.target.result; };
-  reader.readAsText(file);
-  e.target.value = "";
-});
-
 evalCloseBtn.addEventListener("click", () => evalModal.classList.add("hidden"));
 evalModal.addEventListener("click", (e) => { if (e.target === evalModal) evalModal.classList.add("hidden"); });
 
@@ -709,13 +696,9 @@ evalDetailModal.addEventListener("click", (e) => { if (e.target === evalDetailMo
 
 evalRunBtn.addEventListener("click", async () => {
   const graphId = parseInt(document.getElementById("eval-graph-a").value);
-  const promptKey = document.getElementById("eval-prompt").value;
   const evalModel = document.getElementById("eval-model").value;
-  const text = document.getElementById("eval-text").value.trim();
 
   if (!graphId) { evalResults.innerHTML = "<div style='color:var(--error);font-size:13px;'>Select a graph.</div>"; return; }
-  if (!promptKey) { evalResults.innerHTML = "<div style='color:var(--error);font-size:13px;'>Select a prompt.</div>"; return; }
-  if (!text) { evalResults.innerHTML = "<div style='color:var(--error);font-size:13px;'>Paste the source text.</div>"; return; }
 
   evalRunBtn.disabled = true;
   evalRunBtn.textContent = "Running...";
@@ -725,7 +708,7 @@ evalRunBtn.addEventListener("click", async () => {
     const res = await fetch(`${API_BASE_URL}/evaluate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ graph_id: graphId, text, prompt_key: promptKey, model: evalModel }),
+      body: JSON.stringify({ graph_id: graphId, model: evalModel }),
     });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
