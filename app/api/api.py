@@ -6,6 +6,7 @@ import webbrowser
 from fastapi import APIRouter
 
 from app.articles.model.article_entity import Base
+import app.evaluation.model.evaluation_entity  # noqa: F401 — registers evaluation tables with Base
 from app.config.database import engine
 from app.config.settings import settings
 from app.kb.knowledge_base_service import knowledge_base_service

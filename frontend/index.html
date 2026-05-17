@@ -125,13 +125,30 @@
         </div>
         <textarea id="eval-text" rows="8" placeholder="Paste the text that was used to extract this graph..." style="width:100%;box-sizing:border-box;resize:vertical;"></textarea>
       </div>
-      <div style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
         <button id="eval-run-btn" type="button" style="width:auto;padding:6px 14px;font-size:13px;">Run</button>
       </div>
       <div id="eval-results"></div>
+      <div id="eval-history-section" style="margin-top:8px;">
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;border-top:1px solid var(--border);padding-top:14px;">History</div>
+        <div id="eval-history-list"></div>
+      </div>
     </div>
   </div>
 
-  <script src="script.js?v=24"></script>
+  <div id="eval-detail-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h2 style="margin:0;">Evaluation Details</h2>
+          <div id="eval-detail-subtitle" style="font-size:12px;color:var(--text-muted);margin-top:2px;"></div>
+        </div>
+        <button id="eval-detail-close-btn" class="modal-close" type="button">&times;</button>
+      </div>
+      <div id="eval-detail-content"></div>
+    </div>
+  </div>
+
+  <script src="script.js?v=30"></script>
 </body>
 </html>

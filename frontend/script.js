@@ -537,8 +537,120 @@ const evalModal = document.getElementById("eval-modal");
 const evalCloseBtn = document.getElementById("eval-close-btn");
 const evalRunBtn = document.getElementById("eval-run-btn");
 const evalResults = document.getElementById("eval-results");
+const evalHistoryList = document.getElementById("eval-history-list");
+const evalDetailModal = document.getElementById("eval-detail-modal");
+const evalDetailClose = document.getElementById("eval-detail-close-btn");
+const evalDetailSubtitle = document.getElementById("eval-detail-subtitle");
+const evalDetailContent = document.getElementById("eval-detail-content");
 
 let graphListCache = [];
+
+function buildEvalResultHtml(data) {
+  const pct = v => (v * 100).toFixed(1) + "%";
+  const metricColor = v => v >= 0.7 ? "var(--success)" : v >= 0.4 ? "var(--warning)" : "var(--error)";
+
+  const metricsHtml = `
+    <div style="display:flex;gap:12px;margin-bottom:16px;">
+      ${[["Precision", data.precision], ["Recall", data.recall], ["F1", data.f1]].map(([label, val]) => `
+        <div style="flex:1;background:var(--bg-lighter);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;">
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">${label}</div>
+          <div style="font-size:22px;font-weight:700;color:${metricColor(val)};">${pct(val)}</div>
+        </div>`).join("")}
+      <div style="flex:1;background:var(--bg-lighter);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;">
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Hallucinated</div>
+        <div style="font-size:22px;font-weight:700;color:${metricColor(1 - data.unsupported_count / data.graph_relations)};">${data.unsupported_count}/${data.graph_relations}</div>
+      </div>
+    </div>`;
+
+  const verdictsHtml = data.triple_verdicts?.length ? `
+    <div style="margin-bottom:14px;">
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Triples</div>
+      <div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+        ${data.triple_verdicts.map(v => `
+          <div style="display:flex;align-items:flex-start;gap:10px;padding:6px 10px;border-bottom:1px solid var(--border);font-size:12px;">
+            <span style="flex-shrink:0;color:${v.supported ? "var(--success)" : "var(--error)"};">${v.supported ? "✓" : "✕"}</span>
+            <span style="flex:1;color:var(--text);font-family:monospace;">${v.triple}</span>
+            ${v.comment ? `<span style="color:var(--text-muted);font-size:11px;max-width:200px;">${v.comment}</span>` : ""}
+          </div>`).join("")}
+      </div>
+    </div>` : "";
+
+  const missingHtml = data.missing_relations?.length ? `
+    <div style="margin-bottom:14px;">
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Missing (${data.missing_count})</div>
+      <div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+        ${data.missing_relations.map(r => `
+          <div style="padding:6px 10px;border-bottom:1px solid var(--border);font-size:12px;color:var(--warning);font-family:monospace;">${r}</div>`).join("")}
+      </div>
+    </div>` : "";
+
+  const analysisHtml = `
+    <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Analysis</div>
+    <div style="font-size:13px;white-space:pre-wrap;line-height:1.7;color:var(--text);">${data.analysis}</div>`;
+
+  return metricsHtml + verdictsHtml + missingHtml + analysisHtml;
+}
+
+async function loadEvalHistory() {
+  evalHistoryList.innerHTML = "<div style='color:var(--text-muted);font-size:12px;'>Loading...</div>";
+  const res = await fetch(`${API_BASE_URL}/evaluations`);
+  const items = await res.json();
+
+  if (!items.length) {
+    evalHistoryList.innerHTML = "<div style='color:var(--text-muted);font-size:12px;font-style:italic;'>No saved evaluations yet.</div>";
+    return;
+  }
+
+  const pct = v => (v * 100).toFixed(1) + "%";
+  const metricColor = v => v >= 0.7 ? "var(--success)" : v >= 0.4 ? "var(--warning)" : "var(--error)";
+  const graphMap = Object.fromEntries(graphListCache.map(g => [g.graph_id, g]));
+
+  evalHistoryList.innerHTML = `
+    <div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 56px 56px 56px 24px;gap:8px;padding:5px 10px;background:var(--bg-lighter);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">
+        <span>Graph</span><span>Prompt</span><span>Model</span><span>P</span><span>R</span><span>F1</span><span></span>
+      </div>
+      ${items.map(e => {
+        const g = graphMap[e.graph_id];
+        const graphLabel = g ? (g.title || `#${e.graph_id}`) : `#${e.graph_id}`;
+        const modelLabel = g?.model ? g.model.replace(/^local:/, "").split("/").pop() : "—";
+        return `<div class="eval-history-row" data-id="${e.id}" data-graph="${graphLabel}" data-prompt="${e.prompt_key}" style="display:grid;grid-template-columns:1fr 1fr 1fr 56px 56px 56px 24px;gap:8px;align-items:center;padding:6px 10px;border-top:1px solid var(--border);cursor:pointer;font-size:12px;transition:background 0.1s;">
+          <span style="color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${graphLabel}</span>
+          <span style="color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.prompt_key}</span>
+          <span style="color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${modelLabel}</span>
+          <span style="font-weight:600;color:${metricColor(e.precision)};">${pct(e.precision)}</span>
+          <span style="font-weight:600;color:${metricColor(e.recall)};">${pct(e.recall)}</span>
+          <span style="font-weight:600;color:${metricColor(e.f1)};">${pct(e.f1)}</span>
+          <span class="eval-history-delete" data-id="${e.id}" style="color:var(--text-muted);cursor:pointer;text-align:center;border-radius:3px;padding:1px 3px;font-size:12px;">✕</span>
+        </div>`;
+      }).join("")}
+    </div>`;
+
+  evalHistoryList.querySelectorAll(".eval-history-row").forEach(row => {
+    row.addEventListener("mouseenter", () => row.style.background = "var(--bg-lighter)");
+    row.addEventListener("mouseleave", () => row.style.background = "");
+    row.addEventListener("click", async (e) => {
+      if (e.target.classList.contains("eval-history-delete")) return;
+      const id = parseInt(row.dataset.id);
+      evalDetailSubtitle.textContent = `${row.dataset.graph} · ${row.dataset.prompt}`;
+      evalDetailContent.innerHTML = "<div style='color:var(--text-muted);font-size:13px;'>Loading...</div>";
+      evalDetailModal.classList.remove("hidden");
+      const res = await fetch(`${API_BASE_URL}/evaluations/${id}`);
+      const data = await res.json();
+      evalDetailContent.innerHTML = buildEvalResultHtml(data);
+    });
+  });
+
+  evalHistoryList.querySelectorAll(".eval-history-delete").forEach(btn => {
+    btn.addEventListener("mouseenter", () => { btn.style.color = "var(--error)"; btn.style.background = "var(--error-bg)"; });
+    btn.addEventListener("mouseleave", () => { btn.style.color = "var(--text-muted)"; btn.style.background = ""; });
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      await fetch(`${API_BASE_URL}/evaluations/${parseInt(btn.dataset.id)}`, { method: "DELETE" });
+      await loadEvalHistory();
+    });
+  });
+}
 
 async function openEvalModal() {
   evalResults.innerHTML = "";
@@ -548,10 +660,8 @@ async function openEvalModal() {
     fetch(`${API_BASE_URL}/graphs/all`),
     fetch(`${API_BASE_URL}/prompts`),
   ]);
-  const graphs = await graphsRes.json();
+  graphListCache = ((await graphsRes.json()) || []).filter(g => g.relation_count > 0);
   const prompts = await promptsRes.json();
-
-  graphListCache = (graphs || []).filter(g => g.relation_count > 0);
 
   const selGraph = document.getElementById("eval-graph-a");
   selGraph.innerHTML = "";
@@ -571,6 +681,8 @@ async function openEvalModal() {
     opt.textContent = p.label;
     selPrompt.appendChild(opt);
   });
+
+  await loadEvalHistory();
 }
 
 compareBtn.addEventListener("click", openEvalModal);
@@ -579,9 +691,7 @@ document.getElementById("eval-file-input").addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = (ev) => {
-    document.getElementById("eval-text").value = ev.target.result;
-  };
+  reader.onload = (ev) => { document.getElementById("eval-text").value = ev.target.result; };
   reader.readAsText(file);
   e.target.value = "";
 });
@@ -589,23 +699,17 @@ document.getElementById("eval-file-input").addEventListener("change", (e) => {
 evalCloseBtn.addEventListener("click", () => evalModal.classList.add("hidden"));
 evalModal.addEventListener("click", (e) => { if (e.target === evalModal) evalModal.classList.add("hidden"); });
 
+evalDetailClose.addEventListener("click", () => evalDetailModal.classList.add("hidden"));
+evalDetailModal.addEventListener("click", (e) => { if (e.target === evalDetailModal) evalDetailModal.classList.add("hidden"); });
+
 evalRunBtn.addEventListener("click", async () => {
   const graphId = parseInt(document.getElementById("eval-graph-a").value);
   const promptKey = document.getElementById("eval-prompt").value;
   const text = document.getElementById("eval-text").value.trim();
 
-  if (!graphId) {
-    evalResults.innerHTML = "<div style='color:var(--error);font-size:13px;'>Select a graph.</div>";
-    return;
-  }
-  if (!promptKey) {
-    evalResults.innerHTML = "<div style='color:var(--error);font-size:13px;'>Select a prompt.</div>";
-    return;
-  }
-  if (!text) {
-    evalResults.innerHTML = "<div style='color:var(--error);font-size:13px;'>Paste the source text.</div>";
-    return;
-  }
+  if (!graphId) { evalResults.innerHTML = "<div style='color:var(--error);font-size:13px;'>Select a graph.</div>"; return; }
+  if (!promptKey) { evalResults.innerHTML = "<div style='color:var(--error);font-size:13px;'>Select a prompt.</div>"; return; }
+  if (!text) { evalResults.innerHTML = "<div style='color:var(--error);font-size:13px;'>Paste the source text.</div>"; return; }
 
   evalRunBtn.disabled = true;
   evalRunBtn.textContent = "Running...";
@@ -619,50 +723,8 @@ evalRunBtn.addEventListener("click", async () => {
     });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
-
-    const pct = v => (v * 100).toFixed(1) + "%";
-    const metricColor = v => v >= 0.7 ? "var(--success)" : v >= 0.4 ? "var(--warning)" : "var(--error)";
-
-    const metricsHtml = `
-      <div style="display:flex;gap:12px;margin-bottom:16px;">
-        ${[["Precision", data.precision], ["Recall", data.recall], ["F1", data.f1]].map(([label, val]) => `
-          <div style="flex:1;background:var(--bg-lighter);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;">
-            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">${label}</div>
-            <div style="font-size:22px;font-weight:700;color:${metricColor(val)};">${pct(val)}</div>
-          </div>`).join("")}
-        <div style="flex:1;background:var(--bg-lighter);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;">
-          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Hallucinated</div>
-          <div style="font-size:22px;font-weight:700;color:${metricColor(1 - data.unsupported_count / data.graph_relations)};">${data.unsupported_count}/${data.graph_relations}</div>
-        </div>
-      </div>`;
-
-    const verdictsHtml = data.triple_verdicts.length ? `
-      <div style="margin-bottom:14px;">
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Triples</div>
-        <div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;">
-          ${data.triple_verdicts.map(v => `
-            <div style="display:flex;align-items:flex-start;gap:10px;padding:6px 10px;border-bottom:1px solid var(--border);font-size:12px;">
-              <span style="flex-shrink:0;color:${v.supported ? "var(--success)" : "var(--error)"};">${v.supported ? "✓" : "✕"}</span>
-              <span style="flex:1;color:var(--text);font-family:monospace;">${v.triple}</span>
-              ${v.comment ? `<span style="color:var(--text-muted);font-size:11px;max-width:200px;">${v.comment}</span>` : ""}
-            </div>`).join("")}
-        </div>
-      </div>` : "";
-
-    const missingHtml = data.missing_relations.length ? `
-      <div style="margin-bottom:14px;">
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Missing (${data.missing_count})</div>
-        <div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;">
-          ${data.missing_relations.map(r => `
-            <div style="padding:6px 10px;border-bottom:1px solid var(--border);font-size:12px;color:var(--warning);font-family:monospace;">${r}</div>`).join("")}
-        </div>
-      </div>` : "";
-
-    const analysisHtml = `
-      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Analysis</div>
-      <div style="font-size:13px;white-space:pre-wrap;line-height:1.7;color:var(--text);">${data.analysis}</div>`;
-
-    evalResults.innerHTML = metricsHtml + verdictsHtml + missingHtml + analysisHtml;
+    evalResults.innerHTML = buildEvalResultHtml(data);
+    await loadEvalHistory();
   } catch (err) {
     evalResults.innerHTML = `<div style='color:var(--error);font-size:13px;'>Error: ${err.message}</div>`;
   } finally {
@@ -670,6 +732,7 @@ evalRunBtn.addEventListener("click", async () => {
     evalRunBtn.textContent = "Run";
   }
 });
+
 
 fetchLocalModels().then(fetchCurrentModel);
 fetchGraphList();
