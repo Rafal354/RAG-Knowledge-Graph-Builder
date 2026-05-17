@@ -346,6 +346,7 @@ async function fetchGraphList() {
         `<span class="graph-item-export" role="button" title="Export .txt" data-id="${g.graph_id}">&#8595;</span>` +
         `<span class="graph-item-delete" role="button" title="Delete" data-id="${g.graph_id}">&times;</span>`;
 
+
       item.addEventListener("click", () => {
         activeGraphId = g.graph_id;
         document.querySelectorAll(".graph-item").forEach(el =>
@@ -529,6 +530,105 @@ loadLatestBtn.addEventListener("click", async () => {
   knownNodeLabels = null;
   await fetchGraphList();
   await renderGraph(false);
+});
+
+const compareBtn = document.getElementById("compare-btn");
+const evalModal = document.getElementById("eval-modal");
+const evalCloseBtn = document.getElementById("eval-close-btn");
+const evalRunBtn = document.getElementById("eval-run-btn");
+const evalResults = document.getElementById("eval-results");
+
+let graphListCache = [];
+
+async function openEvalModal() {
+  evalResults.innerHTML = "";
+  evalModal.classList.remove("hidden");
+
+  const [graphsRes, promptsRes] = await Promise.all([
+    fetch(`${API_BASE_URL}/graphs/all`),
+    fetch(`${API_BASE_URL}/prompts`),
+  ]);
+  const graphs = await graphsRes.json();
+  const prompts = await promptsRes.json();
+
+  graphListCache = (graphs || []).filter(g => g.relation_count > 0);
+
+  const selGraph = document.getElementById("eval-graph-a");
+  selGraph.innerHTML = "";
+  graphListCache.forEach(g => {
+    const opt = document.createElement("option");
+    opt.value = g.graph_id;
+    const modelLabel = g.model ? g.model.replace(/^local:/, "").split("/").pop() : "—";
+    opt.textContent = `[${g.position ?? "—"}] ${g.title ?? "—"} · ${modelLabel}`;
+    selGraph.appendChild(opt);
+  });
+
+  const selPrompt = document.getElementById("eval-prompt");
+  selPrompt.innerHTML = "";
+  (prompts || []).forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p.key;
+    opt.textContent = p.label;
+    selPrompt.appendChild(opt);
+  });
+}
+
+compareBtn.addEventListener("click", openEvalModal);
+
+document.getElementById("eval-file-input").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    document.getElementById("eval-text").value = ev.target.result;
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+});
+
+evalCloseBtn.addEventListener("click", () => evalModal.classList.add("hidden"));
+evalModal.addEventListener("click", (e) => { if (e.target === evalModal) evalModal.classList.add("hidden"); });
+
+evalRunBtn.addEventListener("click", async () => {
+  const graphId = parseInt(document.getElementById("eval-graph-a").value);
+  const promptKey = document.getElementById("eval-prompt").value;
+  const text = document.getElementById("eval-text").value.trim();
+
+  if (!graphId) {
+    evalResults.innerHTML = "<div style='color:var(--error);font-size:13px;'>Select a graph.</div>";
+    return;
+  }
+  if (!promptKey) {
+    evalResults.innerHTML = "<div style='color:var(--error);font-size:13px;'>Select a prompt.</div>";
+    return;
+  }
+  if (!text) {
+    evalResults.innerHTML = "<div style='color:var(--error);font-size:13px;'>Paste the source text.</div>";
+    return;
+  }
+
+  evalRunBtn.disabled = true;
+  evalRunBtn.textContent = "Running...";
+  evalResults.innerHTML = "<div style='color:var(--text-muted);font-size:13px;'>Evaluating graph...</div>";
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/evaluate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ graph_id: graphId, text, prompt_key: promptKey }),
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    evalResults.innerHTML =
+      `<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">` +
+      `Graph: ${data.graph_relations} relations</div>` +
+      `<div style="font-size:13px;white-space:pre-wrap;line-height:1.7;color:var(--text);">${data.analysis}</div>`;
+  } catch (err) {
+    evalResults.innerHTML = `<div style='color:var(--error);font-size:13px;'>Error: ${err.message}</div>`;
+  } finally {
+    evalRunBtn.disabled = false;
+    evalRunBtn.textContent = "Run";
+  }
 });
 
 fetchLocalModels().then(fetchCurrentModel);

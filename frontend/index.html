@@ -40,9 +40,9 @@
           <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash 8B</option>
         </optgroup>
         <optgroup label="OpenRouter">
-          <option value="google/gemma-4-26b-a4b-it:free">Gemma 4 26B A4B</option>
+          <option value="google/gemma-4-26b-a4b-it">Gemma 4 26B A4B</option>
           <option value="google/gemma-4-31b-it:free">Gemma 4 31B</option>
-          <option value="openai/gpt-oss-20b:free">GPT-OSS 20B</option>
+          <option value="openai/gpt-oss-20b">GPT-OSS 20B</option>
           <option value="nvidia/nemotron-3-nano-30b-a3b:free">Nemotron 3 Nano 30B A3B</option>
         </optgroup>
         <optgroup label="Alibaba Cloud">
@@ -94,6 +94,7 @@
     <div class="history-header">
       <h2>Graph History</h2>
       <div class="history-header-actions">
+        <button id="compare-btn" type="button" class="btn-secondary">Evaluate</button>
         <button id="manual-toggle-btn" type="button">+ Add manually</button>
         <button id="load-latest-btn" type="button">Load latest</button>
       </div>
@@ -101,6 +102,36 @@
     <div id="graph-history"></div>
   </div>
 
-  <script src="script.js?v=17"></script>
+  <div id="eval-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Graph Evaluation</h2>
+        <button id="eval-close-btn" class="modal-close" type="button">&times;</button>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;">
+        <div style="flex:1;">
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Graph</label>
+          <select id="eval-graph-a" style="width:100%;"></select>
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Extraction prompt</label>
+          <select id="eval-prompt" style="width:100%;"></select>
+        </div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <label style="font-size:11px;color:var(--text-muted);margin-bottom:0;">Source text</label>
+          <label id="eval-file-label" class="manual-file-label" style="margin-bottom:0;font-size:11px;">Load .txt<input id="eval-file-input" type="file" accept=".txt" style="display:none;" /></label>
+        </div>
+        <textarea id="eval-text" rows="8" placeholder="Paste the text that was used to extract this graph..." style="width:100%;box-sizing:border-box;resize:vertical;"></textarea>
+      </div>
+      <div style="margin-bottom:16px;">
+        <button id="eval-run-btn" type="button" style="width:auto;padding:6px 14px;font-size:13px;">Run</button>
+      </div>
+      <div id="eval-results"></div>
+    </div>
+  </div>
+
+  <script src="script.js?v=23"></script>
 </body>
 </html>

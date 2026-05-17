@@ -538,9 +538,11 @@ button:disabled {
   padding: 28px;
   width: 640px;
   max-width: calc(100vw - 48px);
+  max-height: calc(100vh - 80px);
   display: flex;
   flex-direction: column;
   gap: 14px;
+  overflow-y: auto;
 }
 
 .modal-header {
@@ -669,6 +671,40 @@ button:disabled {
 .btn-secondary:hover:not(:disabled) {
   background: var(--bg-lighter) !important;
   color: var(--text) !important;
+}
+
+/* ── Evaluation table ── */
+
+.eval-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.eval-table th {
+  text-align: left;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.eval-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+.eval-table tr:last-child td {
+  border-bottom: none;
+}
+
+.eval-table td:first-child {
+  color: var(--text-muted);
+  font-size: 12px;
 }
 
 /* ── Graph section ── */

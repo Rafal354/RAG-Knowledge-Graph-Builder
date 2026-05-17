@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.api import router as health_router, startup_event, shutdown_event
 from app.articles.api import router as articles_router
+from app.evaluation.api import router as evaluation_router
 from app.graph.api import router as graphs_router
 from app.model.api import router as model_router
 
@@ -39,6 +40,7 @@ app.include_router(health_router)
 app.include_router(articles_router)
 app.include_router(graphs_router)
 app.include_router(model_router)
+app.include_router(evaluation_router)
 
 IN_DOCKER = os.path.exists("/.dockerenv")
 if not IN_DOCKER:
