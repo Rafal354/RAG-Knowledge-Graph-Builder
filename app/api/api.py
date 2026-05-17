@@ -6,7 +6,8 @@ import webbrowser
 from fastapi import APIRouter
 
 from app.articles.model.article_entity import Base
-import app.evaluation.model.evaluation_entity  # noqa: F401 — registers evaluation tables with Base
+import app.evaluation.model.evaluation_entity  # noqa: F401
+import app.kb.model.prompt_entity  # noqa: F401
 from app.config.database import engine
 from app.config.settings import settings
 from app.kb.knowledge_base_service import knowledge_base_service
@@ -19,14 +20,35 @@ neo4j_service: Neo4jService | None = None
 ARTICLE_NOT_FOUND = "Article not found"
 
 
+def _seed_prompts() -> None:
+    from app.config.database import SessionLocal
+    from app.kb.model.prompt_entity import PromptEntity
+    from app.kb.prompts import PROMPTS
+
+    with SessionLocal() as session:
+        for prompt_set, types in PROMPTS.items():
+            for prompt_type, content in types.items():
+                key = f"{prompt_set}/{prompt_type}"
+                existing = session.get(PromptEntity, key)
+                if existing is None:
+                    session.add(PromptEntity(key=key, content=content))
+                else:
+                    existing.content = content
+        session.commit()
+    logger.info("Prompts seeded")
+
+
 def startup_event():
     Base.metadata.create_all(bind=engine)
     with engine.connect() as conn:
         from sqlalchemy import text
         conn.execute(text("ALTER TABLE graphs ADD COLUMN IF NOT EXISTS title TEXT"))
         conn.execute(text("ALTER TABLE graphs ADD COLUMN IF NOT EXISTS model TEXT"))
+        conn.execute(text("ALTER TABLE graphs ADD COLUMN IF NOT EXISTS article_id INTEGER REFERENCES articles(id) ON DELETE SET NULL"))
+        conn.execute(text("ALTER TABLE graphs ADD COLUMN IF NOT EXISTS prompt_key TEXT REFERENCES prompts(key) ON DELETE SET NULL"))
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS eval_model TEXT DEFAULT ''"))
         conn.commit()
+    _seed_prompts()
     global neo4j_service
     neo4j_service = Neo4jService(
         uri=settings.neo4j_uri,

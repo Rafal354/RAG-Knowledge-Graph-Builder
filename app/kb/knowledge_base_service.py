@@ -41,18 +41,21 @@ class KnowledgeBaseService:
     def get_status(self) -> dict:
         return {"processing": self.processing, "error": self.last_error}
 
-    def update_from_request_async(self, req: AddArticleRequest) -> None:
+    def update_from_request_async(self, req: AddArticleRequest, article_id: int | None = None) -> None:
         self.last_error = None
         self.processing = True
-        self.executor.submit(self._update_from_article, req.title, req.text, self.current_model)
+        self.executor.submit(self._update_from_article, req.title, req.text, self.current_model, article_id)
 
-    def _update_from_article(self, title: str, text: str, model: str) -> None:
+    def _update_from_article(self, title: str, text: str, model: str, article_id: int | None = None) -> None:
         try:
             graph_text = self.graph_service.get_latest_graph_text()
             if not graph_text or graph_text.strip() == "[RELATIONS]":
-                prompt = self.prompt_service.build_prompt("new_graph", title=title, text=text)
+                prompt_type = "new_graph"
+                prompt = self.prompt_service.build_prompt(prompt_type, title=title, text=text)
             else:
-                prompt = self.prompt_service.build_prompt("existing_graph", title=title, text=text, graph=graph_text)
+                prompt_type = "existing_graph"
+                prompt = self.prompt_service.build_prompt(prompt_type, title=title, text=text, graph=graph_text)
+            prompt_key = f"{self.prompt_service.prompt_set}/{prompt_type}"
 
             logger.info("Prompt: %s", prompt)
 
@@ -114,7 +117,7 @@ class KnowledgeBaseService:
 
             logger.info("Response: %s", response_to_return)
 
-            self.graph_service.save_graph(response_to_return, title=title, model=model)
+            self.graph_service.save_graph(response_to_return, title=title, model=model, article_id=article_id, prompt_key=prompt_key)
             try:
                 self.neo4j_service.push_graph(self.graph_service.get_latest_graph())
             except Exception:

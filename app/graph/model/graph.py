@@ -11,6 +11,8 @@ class GraphSummary(BaseModel):
     relation_count: int
     title: str | None = None
     model: str | None = None
+    article_id: int | None = None
+    prompt_key: str | None = None
 
 
 class GraphRelationDetails(BaseModel):

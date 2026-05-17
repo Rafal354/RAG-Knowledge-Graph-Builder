@@ -10,10 +10,10 @@ class GraphService:
     def __init__(self, graph_repository: GraphRepository) -> None:
         self.graph_repository = graph_repository
 
-    def save_graph(self, llm_output: str, title: str | None = None, model: str | None = None) -> GraphDetails:
+    def save_graph(self, llm_output: str, title: str | None = None, model: str | None = None, article_id: int | None = None, prompt_key: str | None = None) -> GraphDetails:
         relations = self._parse_relations(llm_output)
         logger.info("Relations: %s", relations)
-        return self.graph_repository.save_graph(relations, title=title, model=model)
+        return self.graph_repository.save_graph(relations, title=title, model=model, article_id=article_id, prompt_key=prompt_key)
 
     def get_latest_graph_text(self) -> str:
         latest_graph = self.graph_repository.get_latest_graph()

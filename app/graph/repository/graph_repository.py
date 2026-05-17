@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class GraphRepository:
-    def save_graph(self, relations: list[tuple[str, str, str]], title: str | None = None, model: str | None = None) -> GraphDetails:
+    def save_graph(self, relations: list[tuple[str, str, str]], title: str | None = None, model: str | None = None, article_id: int | None = None, prompt_key: str | None = None) -> GraphDetails:
         with SessionLocal() as session:
             try:
                 latest_version_row = (
@@ -26,7 +26,7 @@ class GraphRepository:
 
                 logger.info(f"Next graph version: {next_version}, position: {next_position}")
 
-                graph = GraphEntity(version=next_version, position=next_position, title=title, model=model)
+                graph = GraphEntity(version=next_version, position=next_position, title=title, model=model, article_id=article_id, prompt_key=prompt_key)
                 session.add(graph)
                 session.flush()
 
@@ -87,6 +87,8 @@ class GraphRepository:
                     relation_count=len(g.relations),
                     title=g.title,
                     model=g.model,
+                    article_id=g.article_id,
+                    prompt_key=g.prompt_key,
                 )
                 for g in graphs
             ]
