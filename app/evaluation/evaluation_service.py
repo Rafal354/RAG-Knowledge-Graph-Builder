@@ -20,6 +20,7 @@ class JudgeOutput(BaseModel):
 class EvaluationResult(BaseModel):
     graph_id: int
     graph_relations: int
+    eval_model: str
     precision: float
     recall: float
     f1: float
@@ -40,7 +41,7 @@ def _graph_to_text(graph) -> str:
 
 class EvaluationService:
 
-    def evaluate(self, graph, text: str, prompt_template: str) -> EvaluationResult:
+    def evaluate(self, graph, text: str, prompt_template: str, model: str = "claude-sonnet-4-6") -> EvaluationResult:
         from langchain.chat_models import init_chat_model
 
         graph_text = _graph_to_text(graph)
@@ -60,7 +61,7 @@ class EvaluationService:
             f"Evaluate all {len(graph.relations)} triples."
         )
 
-        llm = init_chat_model("claude-sonnet-4-6", timeout=120)
+        llm = init_chat_model(model, timeout=120)
         judge: JudgeOutput = llm.with_structured_output(JudgeOutput).invoke(prompt)
 
         supported = sum(1 for v in judge.triple_verdicts if v.supported)
@@ -74,6 +75,7 @@ class EvaluationService:
         return EvaluationResult(
             graph_id=graph.id,
             graph_relations=len(graph.relations),
+            eval_model=model,
             precision=round(precision, 3),
             recall=round(recall, 3),
             f1=round(f1, 3),

@@ -25,6 +25,7 @@ def startup_event():
         from sqlalchemy import text
         conn.execute(text("ALTER TABLE graphs ADD COLUMN IF NOT EXISTS title TEXT"))
         conn.execute(text("ALTER TABLE graphs ADD COLUMN IF NOT EXISTS model TEXT"))
+        conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS eval_model TEXT DEFAULT ''"))
         conn.commit()
     global neo4j_service
     neo4j_service = Neo4jService(

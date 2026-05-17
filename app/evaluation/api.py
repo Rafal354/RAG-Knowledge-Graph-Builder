@@ -21,6 +21,7 @@ class EvaluateRequest(BaseModel):
     graph_id: int
     text: str
     prompt_key: str  # format: "default_en/new_graph"
+    model: str = "claude-sonnet-4-6"
 
 
 class SaveEvaluationRequest(BaseModel):
@@ -32,6 +33,7 @@ class EvaluationSummary(BaseModel):
     id: int
     graph_id: int
     prompt_key: str
+    eval_model: str
     precision: float
     recall: float
     f1: float
@@ -61,6 +63,7 @@ def list_evaluations():
             id=e.id,
             graph_id=e.graph_id,
             prompt_key=e.prompt_key,
+            eval_model=e.eval_model,
             precision=e.precision,
             recall=e.recall,
             f1=e.f1,
@@ -81,6 +84,7 @@ def get_evaluation(evaluation_id: int):
     return EvaluationResult(
         graph_id=entity.graph_id,
         graph_relations=entity.supported_count + entity.unsupported_count,
+        eval_model=entity.eval_model,
         precision=entity.precision,
         recall=entity.recall,
         f1=entity.f1,
@@ -118,6 +122,6 @@ async def evaluate(request: EvaluateRequest):
         raise HTTPException(status_code=400, detail=f"Unknown prompt key: {request.prompt_key}")
 
     prompt_template = PROMPTS[parts[0]][parts[1]]
-    result = await asyncio.to_thread(_evaluation_service.evaluate, graph, request.text, prompt_template)
+    result = await asyncio.to_thread(_evaluation_service.evaluate, graph, request.text, prompt_template, request.model)
     await asyncio.to_thread(_evaluation_repository.save, result, request.prompt_key)
     return result

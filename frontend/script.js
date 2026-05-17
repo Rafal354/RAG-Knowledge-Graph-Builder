@@ -607,17 +607,19 @@ async function loadEvalHistory() {
 
   evalHistoryList.innerHTML = `
     <div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 56px 56px 56px 24px;gap:8px;padding:5px 10px;background:var(--bg-lighter);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">
-        <span>Graph</span><span>Prompt</span><span>Model</span><span>P</span><span>R</span><span>F1</span><span></span>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 56px 56px 56px 24px;gap:8px;padding:5px 10px;background:var(--bg-lighter);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">
+        <span>Graph</span><span>Prompt</span><span>Extract</span><span>Judge</span><span>P</span><span>R</span><span>F1</span><span></span>
       </div>
       ${items.map(e => {
         const g = graphMap[e.graph_id];
         const graphLabel = g ? (g.title || `#${e.graph_id}`) : `#${e.graph_id}`;
-        const modelLabel = g?.model ? g.model.replace(/^local:/, "").split("/").pop() : "—";
-        return `<div class="eval-history-row" data-id="${e.id}" data-graph="${graphLabel}" data-prompt="${e.prompt_key}" style="display:grid;grid-template-columns:1fr 1fr 1fr 56px 56px 56px 24px;gap:8px;align-items:center;padding:6px 10px;border-top:1px solid var(--border);cursor:pointer;font-size:12px;transition:background 0.1s;">
+        const extractModel = g?.model ? g.model.replace(/^local:/, "").split("/").pop() : "—";
+        const judgeModel = e.eval_model ? e.eval_model.replace(/^local:/, "").split("/").pop() : "—";
+        return `<div class="eval-history-row" data-id="${e.id}" data-graph="${graphLabel}" data-prompt="${e.prompt_key}" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 56px 56px 56px 24px;gap:8px;align-items:center;padding:6px 10px;border-top:1px solid var(--border);cursor:pointer;font-size:12px;transition:background 0.1s;">
           <span style="color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${graphLabel}</span>
           <span style="color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.prompt_key}</span>
-          <span style="color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${modelLabel}</span>
+          <span style="color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${extractModel}</span>
+          <span style="color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${judgeModel}</span>
           <span style="font-weight:600;color:${metricColor(e.precision)};">${pct(e.precision)}</span>
           <span style="font-weight:600;color:${metricColor(e.recall)};">${pct(e.recall)}</span>
           <span style="font-weight:600;color:${metricColor(e.f1)};">${pct(e.f1)}</span>
@@ -682,6 +684,9 @@ async function openEvalModal() {
     selPrompt.appendChild(opt);
   });
 
+  const selEvalModel = document.getElementById("eval-model");
+  selEvalModel.innerHTML = document.getElementById("model-select").innerHTML;
+
   await loadEvalHistory();
 }
 
@@ -705,6 +710,7 @@ evalDetailModal.addEventListener("click", (e) => { if (e.target === evalDetailMo
 evalRunBtn.addEventListener("click", async () => {
   const graphId = parseInt(document.getElementById("eval-graph-a").value);
   const promptKey = document.getElementById("eval-prompt").value;
+  const evalModel = document.getElementById("eval-model").value;
   const text = document.getElementById("eval-text").value.trim();
 
   if (!graphId) { evalResults.innerHTML = "<div style='color:var(--error);font-size:13px;'>Select a graph.</div>"; return; }
@@ -719,7 +725,7 @@ evalRunBtn.addEventListener("click", async () => {
     const res = await fetch(`${API_BASE_URL}/evaluate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ graph_id: graphId, text, prompt_key: promptKey }),
+      body: JSON.stringify({ graph_id: graphId, text, prompt_key: promptKey, model: evalModel }),
     });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
