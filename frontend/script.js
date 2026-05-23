@@ -660,7 +660,8 @@ async function openEvalModal() {
 
   const graphsRes = await fetch(`${API_BASE_URL}/graphs/all`);
   graphListCache = ((await graphsRes.json()) || [])
-    .filter(g => g.relation_count > 0 && g.article_id && g.prompt_key);
+    .filter(g => g.relation_count > 0 && g.article_id && g.prompt_key)
+    .sort((a, b) => (b.position ?? 0) - (a.position ?? 0));
 
   const selGraph = document.getElementById("eval-graph-a");
   selGraph.innerHTML = "";

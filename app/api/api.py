@@ -47,6 +47,43 @@ def startup_event():
         conn.execute(text("ALTER TABLE graphs ADD COLUMN IF NOT EXISTS article_id INTEGER REFERENCES articles(id) ON DELETE SET NULL"))
         conn.execute(text("ALTER TABLE graphs ADD COLUMN IF NOT EXISTS prompt_key TEXT REFERENCES prompts(key) ON DELETE SET NULL"))
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS eval_model TEXT DEFAULT ''"))
+        conn.execute(text("""
+            DO $$
+            BEGIN
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.table_constraints
+                    WHERE constraint_name = 'evaluations_graph_id_fkey'
+                      AND table_name = 'evaluations'
+                ) THEN
+                    ALTER TABLE evaluations DROP CONSTRAINT evaluations_graph_id_fkey;
+                END IF;
+                ALTER TABLE evaluations
+                    ADD CONSTRAINT evaluations_graph_id_fkey
+                    FOREIGN KEY (graph_id) REFERENCES graphs(id) ON DELETE CASCADE;
+
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.table_constraints
+                    WHERE constraint_name = 'evaluation_triple_verdicts_evaluation_id_fkey'
+                      AND table_name = 'evaluation_triple_verdicts'
+                ) THEN
+                    ALTER TABLE evaluation_triple_verdicts DROP CONSTRAINT evaluation_triple_verdicts_evaluation_id_fkey;
+                END IF;
+                ALTER TABLE evaluation_triple_verdicts
+                    ADD CONSTRAINT evaluation_triple_verdicts_evaluation_id_fkey
+                    FOREIGN KEY (evaluation_id) REFERENCES evaluations(id) ON DELETE CASCADE;
+
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.table_constraints
+                    WHERE constraint_name = 'evaluation_missing_relations_evaluation_id_fkey'
+                      AND table_name = 'evaluation_missing_relations'
+                ) THEN
+                    ALTER TABLE evaluation_missing_relations DROP CONSTRAINT evaluation_missing_relations_evaluation_id_fkey;
+                END IF;
+                ALTER TABLE evaluation_missing_relations
+                    ADD CONSTRAINT evaluation_missing_relations_evaluation_id_fkey
+                    FOREIGN KEY (evaluation_id) REFERENCES evaluations(id) ON DELETE CASCADE;
+            END $$;
+        """))
         conn.commit()
     _seed_prompts()
     global neo4j_service
