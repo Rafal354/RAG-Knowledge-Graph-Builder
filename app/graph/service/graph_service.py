@@ -46,13 +46,16 @@ class GraphService:
 
     @staticmethod
     def _parse_relations(llm_output: str) -> list[tuple[str, str, str]]:
-        if llm_output is None or llm_output == "":
+        if not llm_output:
             return []
-        parts = llm_output.split("[RELATIONS]", maxsplit=1)
-        if len(parts) < 2:
+        relations_part = None
+        for marker in ("[RELATIONS]", "[RELACJE]"):
+            if marker in llm_output:
+                relations_part = llm_output.split(marker, maxsplit=1)[1].strip()
+                break
+        if relations_part is None:
             return []
 
-        relations_part = parts[1].strip()
         relations: list[tuple[str, str, str]] = []
 
         for line in relations_part.splitlines():

@@ -545,6 +545,10 @@ button:disabled {
   overflow-y: auto;
 }
 
+.modal--wide {
+  width: 1200px;
+}
+
 .modal-header {
   display: flex;
   align-items: center;

@@ -1,6 +1,7 @@
+import json
 import logging
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +17,14 @@ class JudgeOutput(BaseModel):
     missing_important_relations: list[str]
     analysis: str
 
+    @field_validator("triple_verdicts", "missing_important_relations", mode="before")
+    @classmethod
+    def _parse_if_string(cls, v):
+        if isinstance(v, str):
+            from json_repair import repair_json
+            return json.loads(repair_json(v))
+        return v
+
 
 class EvaluationResult(BaseModel):
     graph_id: int
@@ -30,6 +39,28 @@ class EvaluationResult(BaseModel):
     triple_verdicts: list[dict]
     missing_relations: list[str]
     analysis: str
+    connectivity_score: float | None = None
+    reference_graph_id: int | None = None
+    t_precision: float | None = None
+    t_recall: float | None = None
+    t_f1: float | None = None
+    hallucination_rate: float | None = None
+    omission_rate: float | None = None
+    ged: int | None = None
+
+
+def _compute_connectivity_score(graph) -> float:
+    import networkx as nx
+    G = nx.Graph()
+    for r in graph.relations:
+        G.add_edge(r.entity_1, r.entity_2)
+    if len(G.nodes) == 0:
+        return 0.0
+    largest = max(nx.connected_components(G), key=len)
+    score = len(largest) / len(G.nodes)
+    logger.info("Connectivity score for graph_id=%d: %.3f (%d/%d nodes in largest component)",
+                graph.id, score, len(largest), len(G.nodes))
+    return round(score, 3)
 
 
 def _graph_to_text(graph) -> str:
@@ -39,9 +70,119 @@ def _graph_to_text(graph) -> str:
     )
 
 
+import re as _re
+_QUOTE_CHARS = frozenset([0x201c, 0x201d, 0x201e, 0x2018, 0x2019, 0x00ab, 0x00bb, 0x22, 0x27])
+_WS_RE = _re.compile(r"\s+")
+
+
+def _normalize_str(s: str) -> str:
+    s = s.lower().strip()
+    s = "".join(c for c in s if ord(c) not in _QUOTE_CHARS)
+    s = _WS_RE.sub(" ", s).strip()
+    return s
+
+
+def _normalize_triple(r) -> tuple:
+    return (_normalize_str(r.entity_1), _normalize_str(r.relation), _normalize_str(r.entity_2))
+
+
+_EMBED_MODEL = None
+
+
+def _get_embed_model():
+    global _EMBED_MODEL
+    if _EMBED_MODEL is None:
+        from sentence_transformers import SentenceTransformer
+        _EMBED_MODEL = SentenceTransformer("paraphrase-multilingual-mpnet-base-v2")
+        logger.info("Sentence embedding model loaded")
+    return _EMBED_MODEL
+
+
+def _triple_str(t: tuple) -> str:
+    return t[0] + " -> " + t[1] + " -> " + t[2]
+
+
+def _semantic_match(predicted: list, reference: list, threshold: float = 0.75):
+    if not predicted or not reference:
+        return 0, set(), set(range(len(reference)))
+    from scipy.optimize import linear_sum_assignment
+    import numpy as np
+    model = _get_embed_model()
+    pred_texts = [_triple_str(t) for t in predicted]
+    ref_texts = [_triple_str(t) for t in reference]
+    pred_emb = model.encode(pred_texts, convert_to_numpy=True, show_progress_bar=False)
+    ref_emb = model.encode(ref_texts, convert_to_numpy=True, show_progress_bar=False)
+    pred_norm = pred_emb / (np.linalg.norm(pred_emb, axis=1, keepdims=True) + 1e-9)
+    ref_norm = ref_emb / (np.linalg.norm(ref_emb, axis=1, keepdims=True) + 1e-9)
+    sim_matrix = pred_norm @ ref_norm.T
+    row_ind, col_ind = linear_sum_assignment(-sim_matrix)
+    matched_pred = set()
+    matched_ref = set()
+    for r, c in zip(row_ind, col_ind):
+        score = float(sim_matrix[r, c])
+        if score >= threshold:
+            matched_pred.add(r)
+            matched_ref.add(c)
+    unmatched_pred = set(range(len(predicted))) - matched_pred
+    unmatched_ref = set(range(len(reference))) - matched_ref
+    return len(matched_pred), unmatched_pred, unmatched_ref
+
+
+def _compute_reference_metrics(graph, reference_graph) -> dict:
+    predicted = [_normalize_triple(r) for r in graph.relations]
+    reference = [_normalize_triple(r) for r in reference_graph.relations]
+
+    matched, unmatched_pred_idx, unmatched_ref_idx = _semantic_match(predicted, reference)
+
+    t_precision = matched / len(predicted) if predicted else 0.0
+    t_recall = matched / len(reference) if reference else 0.0
+    t_f1 = (
+        2 * t_precision * t_recall / (t_precision + t_recall)
+        if (t_precision + t_recall) > 0 else 0.0
+    )
+    hallucination_rate = 1.0 - t_precision
+    omission_rate = 1.0 - t_recall
+
+    predicted_set = set(predicted)
+    reference_set = set(reference)
+    predicted_nodes = {t[0] for t in predicted_set} | {t[2] for t in predicted_set}
+    reference_nodes = {t[0] for t in reference_set} | {t[2] for t in reference_set}
+    ged = len(predicted_set.symmetric_difference(reference_set)) + len(
+        predicted_nodes.symmetric_difference(reference_nodes)
+    )
+
+    logger.info(
+        "Reference graph comparison: graph_id=%d vs reference_id=%d | "
+        "predicted=%d, reference=%d, matched=%d | "
+        "T-P=%.3f T-R=%.3f T-F1=%.3f | Unmatched=%.3f Missing=%.3f GED=%d",
+        graph.id, reference_graph.id,
+        len(predicted), len(reference), matched,
+        t_precision, t_recall, t_f1,
+        hallucination_rate, omission_rate, ged,
+    )
+    if unmatched_pred_idx:
+        logger.info("Unmatched in predicted (not in reference):")
+        for i in sorted(unmatched_pred_idx):
+            logger.info("  + %s", _triple_str(predicted[i]))
+    if unmatched_ref_idx:
+        logger.info("Missing from predicted (in reference, not matched):")
+        for i in sorted(unmatched_ref_idx):
+            logger.info("  - %s", _triple_str(reference[i]))
+
+    return dict(
+        reference_graph_id=reference_graph.id,
+        t_precision=round(t_precision, 3),
+        t_recall=round(t_recall, 3),
+        t_f1=round(t_f1, 3),
+        hallucination_rate=round(hallucination_rate, 3),
+        omission_rate=round(omission_rate, 3),
+        ged=ged,
+    )
+
+
 class EvaluationService:
 
-    def evaluate(self, graph, text: str, prompt_template: str, model: str = "claude-sonnet-4-6") -> EvaluationResult:
+    def evaluate(self, graph, text: str, prompt_template: str, model: str = "claude-sonnet-4-6", reference_graph=None) -> EvaluationResult:
         from langchain.chat_models import init_chat_model
 
         graph_text = _graph_to_text(graph)
@@ -72,6 +213,9 @@ class EvaluationService:
         recall = supported / (supported + missing) if (supported + missing) > 0 else 0.0
         f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
 
+        ref_metrics = _compute_reference_metrics(graph, reference_graph) if reference_graph is not None else {}
+        connectivity_score = _compute_connectivity_score(graph)
+
         return EvaluationResult(
             graph_id=graph.id,
             graph_relations=len(graph.relations),
@@ -85,4 +229,6 @@ class EvaluationService:
             triple_verdicts=[v.model_dump() for v in judge.triple_verdicts],
             missing_relations=judge.missing_important_relations,
             analysis=judge.analysis,
+            connectivity_score=connectivity_score,
+            **ref_metrics,
         )

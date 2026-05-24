@@ -29,6 +29,14 @@ class EvaluationRepository:
                     unsupported_count=result.unsupported_count,
                     missing_count=result.missing_count,
                     analysis=result.analysis,
+                    connectivity_score=result.connectivity_score,
+                    reference_graph_id=result.reference_graph_id,
+                    hallucination_rate=result.hallucination_rate,
+                    omission_rate=result.omission_rate,
+                    t_precision=result.t_precision,
+                    t_recall=result.t_recall,
+                    t_f1=result.t_f1,
+                    ged=result.ged,
                 )
                 session.add(entity)
                 session.flush()

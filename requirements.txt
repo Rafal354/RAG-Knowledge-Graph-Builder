@@ -13,3 +13,7 @@ fastapi
 uvicorn[standard]
 neo4j
 psycopg[binary]
+networkx
+sentence-transformers
+scipy
+json-repair

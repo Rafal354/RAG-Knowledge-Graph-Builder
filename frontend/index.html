@@ -103,23 +103,27 @@
   </div>
 
   <div id="eval-modal" class="modal-overlay hidden">
-    <div class="modal">
+    <div class="modal modal--wide">
       <div class="modal-header">
         <h2>Graph Evaluation</h2>
         <button id="eval-close-btn" class="modal-close" type="button">&times;</button>
       </div>
-      <div style="display:flex;gap:12px;margin-bottom:16px;">
-        <div style="flex:2;">
-          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Graph</label>
+      <div style="display:flex;gap:16px;margin-bottom:16px;align-items:flex-end;">
+        <div style="flex:3;">
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Graf</label>
           <select id="eval-graph-a" style="width:100%;"></select>
         </div>
-        <div style="flex:1;">
-          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Judge model</label>
+        <div style="flex:3;">
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Graf referencyjny (opcjonalnie)</label>
+          <select id="eval-ref-graph" style="width:100%;"></select>
+        </div>
+        <div style="flex:2;">
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Model sędziego</label>
           <select id="eval-model" style="width:100%;"></select>
         </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
-        <button id="eval-run-btn" type="button" style="width:auto;padding:6px 14px;font-size:13px;">Run</button>
+        <div style="flex:0 0 auto;">
+          <button id="eval-run-btn" type="button" style="width:auto;padding:7px 20px;font-size:13px;">Run</button>
+        </div>
       </div>
       <div id="eval-results"></div>
       <div id="eval-history-section" style="margin-top:8px;">
@@ -130,7 +134,7 @@
   </div>
 
   <div id="eval-detail-modal" class="modal-overlay hidden">
-    <div class="modal">
+    <div class="modal modal--wide">
       <div class="modal-header">
         <div>
           <h2 style="margin:0;">Evaluation Details</h2>
@@ -142,6 +146,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=32"></script>
+  <script src="script.js?v=41"></script>
 </body>
 </html>

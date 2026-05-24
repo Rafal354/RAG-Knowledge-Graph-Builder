@@ -47,6 +47,14 @@ def startup_event():
         conn.execute(text("ALTER TABLE graphs ADD COLUMN IF NOT EXISTS article_id INTEGER REFERENCES articles(id) ON DELETE SET NULL"))
         conn.execute(text("ALTER TABLE graphs ADD COLUMN IF NOT EXISTS prompt_key TEXT REFERENCES prompts(key) ON DELETE SET NULL"))
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS eval_model TEXT DEFAULT ''"))
+        conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS connectivity_score FLOAT"))
+        conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS reference_graph_id INTEGER"))
+        conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS hallucination_rate FLOAT"))
+        conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS omission_rate FLOAT"))
+        conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS t_precision FLOAT"))
+        conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS t_recall FLOAT"))
+        conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS t_f1 FLOAT"))
+        conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS ged INTEGER"))
         conn.execute(text("""
             DO $$
             BEGIN

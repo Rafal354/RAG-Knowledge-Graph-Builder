@@ -20,6 +20,14 @@ class EvaluationEntity(Base):
     unsupported_count: Mapped[int] = mapped_column(Integer, nullable=False)
     missing_count: Mapped[int] = mapped_column(Integer, nullable=False)
     analysis: Mapped[str] = mapped_column(Text, nullable=False)
+    connectivity_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    reference_graph_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    hallucination_rate: Mapped[float | None] = mapped_column(Float, nullable=True)
+    omission_rate: Mapped[float | None] = mapped_column(Float, nullable=True)
+    t_precision: Mapped[float | None] = mapped_column(Float, nullable=True)
+    t_recall: Mapped[float | None] = mapped_column(Float, nullable=True)
+    t_f1: Mapped[float | None] = mapped_column(Float, nullable=True)
+    ged: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

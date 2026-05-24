@@ -548,6 +548,7 @@ let graphListCache = [];
 function buildEvalResultHtml(data) {
   const pct = v => (v * 100).toFixed(1) + "%";
   const metricColor = v => v >= 0.7 ? "var(--success)" : v >= 0.4 ? "var(--warning)" : "var(--error)";
+  const rateColor = v => v <= 0.3 ? "var(--success)" : v <= 0.6 ? "var(--warning)" : "var(--error)";
 
   const metricsHtml = `
     <div style="display:flex;gap:12px;margin-bottom:16px;">
@@ -560,7 +561,34 @@ function buildEvalResultHtml(data) {
         <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Hallucinated</div>
         <div style="font-size:22px;font-weight:700;color:${metricColor(1 - data.unsupported_count / data.graph_relations)};">${data.unsupported_count}/${data.graph_relations}</div>
       </div>
+      ${data.connectivity_score != null ? `
+      <div style="flex:1;background:var(--bg-lighter);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;">
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Connectivity</div>
+        <div style="font-size:22px;font-weight:700;color:${metricColor(data.connectivity_score)};">${pct(data.connectivity_score)}</div>
+      </div>` : ""}
     </div>`;
+
+  const refMetricsHtml = (data.t_precision != null) ? `
+    <div style="margin-bottom:6px;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Reference graph comparison (graph #${data.reference_graph_id})</div>
+    <div style="display:flex;gap:12px;margin-bottom:16px;">
+      ${[["T-Precision", data.t_precision, metricColor], ["T-Recall", data.t_recall, metricColor], ["T-F1", data.t_f1, metricColor]].map(([label, val, color]) => `
+        <div style="flex:1;background:var(--bg-lighter);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;">
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">${label}</div>
+          <div style="font-size:22px;font-weight:700;color:${color(val)};">${pct(val)}</div>
+        </div>`).join("")}
+      <div style="flex:1;background:var(--bg-lighter);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;">
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Unmatched</div>
+        <div style="font-size:22px;font-weight:700;color:${rateColor(data.hallucination_rate)};">${pct(data.hallucination_rate)}</div>
+      </div>
+      <div style="flex:1;background:var(--bg-lighter);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;">
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Missing</div>
+        <div style="font-size:22px;font-weight:700;color:${rateColor(data.omission_rate)};">${pct(data.omission_rate)}</div>
+      </div>
+      <div style="flex:1;background:var(--bg-lighter);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;">
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">GED</div>
+        <div style="font-size:22px;font-weight:700;color:var(--text);">${data.ged}</div>
+      </div>
+    </div>` : "";
 
   const verdictsHtml = data.triple_verdicts?.length ? `
     <div style="margin-bottom:14px;">
@@ -588,7 +616,7 @@ function buildEvalResultHtml(data) {
     <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Analysis</div>
     <div style="font-size:13px;white-space:pre-wrap;line-height:1.7;color:var(--text);">${data.analysis}</div>`;
 
-  return metricsHtml + verdictsHtml + missingHtml + analysisHtml;
+  return metricsHtml + refMetricsHtml + verdictsHtml + missingHtml + analysisHtml;
 }
 
 async function loadEvalHistory() {
@@ -607,15 +635,39 @@ async function loadEvalHistory() {
 
   evalHistoryList.innerHTML = `
     <div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 56px 56px 56px 24px;gap:8px;padding:5px 10px;background:var(--bg-lighter);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">
-        <span>Graph</span><span>Prompt</span><span>Extract</span><span>Judge</span><span>P</span><span>R</span><span>F1</span><span></span>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 60px 60px 60px 52px 60px 60px 60px 60px 60px 48px 60px 24px;gap:8px;padding:5px 10px;background:var(--bg-lighter);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">
+        <span>Graf</span><span>Prompt</span><span>Model</span><span>Sędzia</span><span>Prec.</span><span>Recall</span><span>F1</span><span>Hall.</span><span>Connect.</span><span>T-Prec.</span><span>T-Recall</span><span>T-F1</span><span>Unmatch.</span><span>Missing</span><span>GED</span><span></span>
       </div>
       ${items.map(e => {
         const g = graphMap[e.graph_id];
         const graphLabel = g ? (g.title || `#${e.graph_id}`) : `#${e.graph_id}`;
         const extractModel = g?.model ? g.model.replace(/^local:/, "").split("/").pop() : "—";
         const judgeModel = e.eval_model ? e.eval_model.replace(/^local:/, "").split("/").pop() : "—";
-        return `<div class="eval-history-row" data-id="${e.id}" data-graph="${graphLabel}" data-prompt="${e.prompt_key}" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 56px 56px 56px 24px;gap:8px;align-items:center;padding:6px 10px;border-top:1px solid var(--border);cursor:pointer;font-size:12px;transition:background 0.1s;">
+        const rateColor = v => v <= 0.3 ? "var(--success)" : v <= 0.6 ? "var(--warning)" : "var(--error)";
+        const tF1Cell = e.t_f1 != null
+          ? `<span style="font-weight:600;color:${metricColor(e.t_f1)};">${pct(e.t_f1)}</span>`
+          : `<span style="color:var(--text-muted);">—</span>`;
+        const tPrecCell = e.t_precision != null
+          ? `<span style="font-weight:600;color:${metricColor(e.t_precision)};">${pct(e.t_precision)}</span>`
+          : `<span style="color:var(--text-muted);">—</span>`;
+        const tRecallCell = e.t_recall != null
+          ? `<span style="font-weight:600;color:${metricColor(e.t_recall)};">${pct(e.t_recall)}</span>`
+          : `<span style="color:var(--text-muted);">—</span>`;
+        const hallCell = e.hallucination_rate != null
+          ? `<span style="font-weight:600;color:${rateColor(e.hallucination_rate)};">${pct(e.hallucination_rate)}</span>`
+          : `<span style="color:var(--text-muted);">—</span>`;
+        const missingCell = e.omission_rate != null
+          ? `<span style="font-weight:600;color:${rateColor(e.omission_rate)};">${pct(e.omission_rate)}</span>`
+          : `<span style="color:var(--text-muted);">—</span>`;
+        const gedCell = e.ged != null
+          ? `<span style="font-weight:600;color:var(--text);">${e.ged}</span>`
+          : `<span style="color:var(--text-muted);">—</span>`;
+        const total = e.supported_count + e.unsupported_count;
+        const hallucCell = `<span style="font-weight:600;color:${e.unsupported_count === 0 ? "var(--success)" : e.unsupported_count / total <= 0.3 ? "var(--warning)" : "var(--error)"};">${e.unsupported_count}/${total}</span>`;
+        const connCell = e.connectivity_score != null
+          ? `<span style="font-weight:600;color:${metricColor(e.connectivity_score)};">${pct(e.connectivity_score)}</span>`
+          : `<span style="color:var(--text-muted);">—</span>`;
+        return `<div class="eval-history-row" data-id="${e.id}" data-graph="${graphLabel}" data-prompt="${e.prompt_key}" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 60px 60px 60px 52px 60px 60px 60px 60px 60px 48px 60px 24px;gap:8px;align-items:center;padding:6px 10px;border-top:1px solid var(--border);cursor:pointer;font-size:12px;transition:background 0.1s;">
           <span style="color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${graphLabel}</span>
           <span style="color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.prompt_key}</span>
           <span style="color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${extractModel}</span>
@@ -623,6 +675,14 @@ async function loadEvalHistory() {
           <span style="font-weight:600;color:${metricColor(e.precision)};">${pct(e.precision)}</span>
           <span style="font-weight:600;color:${metricColor(e.recall)};">${pct(e.recall)}</span>
           <span style="font-weight:600;color:${metricColor(e.f1)};">${pct(e.f1)}</span>
+          ${hallucCell}
+          ${connCell}
+          ${tPrecCell}
+          ${tRecallCell}
+          ${tF1Cell}
+          ${hallCell}
+          ${missingCell}
+          ${gedCell}
           <span class="eval-history-delete" data-id="${e.id}" style="color:var(--text-muted);cursor:pointer;text-align:center;border-radius:3px;padding:1px 3px;font-size:12px;">✕</span>
         </div>`;
       }).join("")}
@@ -659,7 +719,9 @@ async function openEvalModal() {
   evalModal.classList.remove("hidden");
 
   const graphsRes = await fetch(`${API_BASE_URL}/graphs/all`);
-  graphListCache = ((await graphsRes.json()) || [])
+  const allGraphs = (await graphsRes.json()) || [];
+
+  graphListCache = allGraphs
     .filter(g => g.relation_count > 0 && g.article_id && g.prompt_key)
     .sort((a, b) => (b.position ?? 0) - (a.position ?? 0));
 
@@ -681,6 +743,23 @@ async function openEvalModal() {
     });
   }
 
+  const selRefGraph = document.getElementById("eval-ref-graph");
+  selRefGraph.innerHTML = "";
+  const noneOpt = document.createElement("option");
+  noneOpt.value = "";
+  noneOpt.textContent = "— none —";
+  selRefGraph.appendChild(noneOpt);
+  allGraphs
+    .filter(g => g.relation_count > 0)
+    .sort((a, b) => (b.position ?? 0) - (a.position ?? 0))
+    .forEach(g => {
+      const opt = document.createElement("option");
+      opt.value = g.graph_id;
+      const modelLabel = g.model ? g.model.replace(/^local:/, "").split("/").pop() : "—";
+      opt.textContent = `[${g.position ?? "—"}] ${g.title ?? "—"} · ${modelLabel}`;
+      selRefGraph.appendChild(opt);
+    });
+
   const selEvalModel = document.getElementById("eval-model");
   selEvalModel.innerHTML = document.getElementById("model-select").innerHTML;
 
@@ -698,6 +777,8 @@ evalDetailModal.addEventListener("click", (e) => { if (e.target === evalDetailMo
 evalRunBtn.addEventListener("click", async () => {
   const graphId = parseInt(document.getElementById("eval-graph-a").value);
   const evalModel = document.getElementById("eval-model").value;
+  const refVal = document.getElementById("eval-ref-graph").value;
+  const referenceGraphId = refVal ? parseInt(refVal) : null;
 
   if (!graphId) { evalResults.innerHTML = "<div style='color:var(--error);font-size:13px;'>Select a graph.</div>"; return; }
 
@@ -709,7 +790,7 @@ evalRunBtn.addEventListener("click", async () => {
     const res = await fetch(`${API_BASE_URL}/evaluate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ graph_id: graphId, model: evalModel }),
+      body: JSON.stringify({ graph_id: graphId, model: evalModel, reference_graph_id: referenceGraphId }),
     });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();

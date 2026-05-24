@@ -95,7 +95,211 @@ PROMPTS: Dict[str, Dict[str, str]] = {
             entity_2
 
             [RELATIONS]
+            entity_1 -> relacja -> entity_2
+
+            Istniejący graf wiedzy:
+            {graph}
+
+            Tytuł artykułu:
+            {title}
+
+            Treść artykułu:
+            {text}
+        """),
+    },
+    "typed_pl": {
+        "new_graph": _clean("""
+            Zbuduj graf wiedzy na podstawie poniższego artykułu.
+
+            Wyodrębniaj wyłącznie relacje między następującymi typami encji:
+            - osoby
+            - organizacje administracyjne, instytucje, NGO, firmy
+            - miasta
+            - kraje
+            - lokalizacje geograficzne inne niż kraj
+            - wydarzenia
+            - daty
+            - adresy mejlowe
+
+            Zasady:
+            - Encje i relacje zapisuj po polsku
+            - Nie duplikuj relacji w odwrotnej kolejności
+
+            Zwróć wynik dokładnie w następującym formacie:
+
+            [RELACJE]
+            encja_1 -> relacja -> encja_2
+
+            Przykład:
+            Łukasz Kowalski -> jest reżyserem -> Film XYZ
+            Film XYZ -> jest produkowany przez -> Studio ABC
+
+            Tytuł artykułu:
+            {title}
+
+            Treść artykułu:
+            {text}
+        """),
+        "existing_graph": _clean("""
+            Zaktualizuj istniejący graf wiedzy na podstawie nowego artykułu.
+
+            Wyodrębniaj wyłącznie relacje między następującymi typami encji:
+            - osoby
+            - organizacje administracyjne, instytucje, NGO, firmy
+            - miasta
+            - kraje
+            - lokalizacje geograficzne inne niż kraj
+            - wydarzenia
+            - daty
+            - adresy mejlowe
+
+            Zasady:
+            - Encje i relacje zapisuj po polsku
+            - Nie duplikuj relacji w odwrotnej kolejności
+            - Zachowaj relacje z istniejącego grafu i dodaj nowe
+            - Jeśli encja już istnieje w grafie, użyj tej samej nazwy
+
+            Zwróć wynik dokładnie w następującym formacie:
+
+            [RELACJE]
+            encja_1 -> relacja -> encja_2
+
+            Istniejący graf wiedzy:
+            {graph}
+
+            Tytuł artykułu:
+            {title}
+
+            Treść artykułu:
+            {text}
+        """),
+    },
+    "typed_en": {
+        "new_graph": _clean("""
+            Build a knowledge graph from the article below.
+
+            Extract only relations between the following entity types:
+            - people
+            - administrative organizations, institutions, NGOs, companies
+            - cities
+            - countries
+            - geographic locations other than countries
+            - events
+            - dates
+            - e-mail addresses
+
+            Rules:
+            - Write entities and relations in English
+            - Do not duplicate relations in reverse order
+
+            Return the result exactly in this format:
+
+            [RELATIONS]
             entity_1 -> relation -> entity_2
+
+            Example:
+            John Smith -> is director of -> Film XYZ
+            Film XYZ -> is produced by -> Studio ABC
+
+            Article title:
+            {title}
+
+            Article text:
+            {text}
+        """),
+        "existing_graph": _clean("""
+            Update the existing knowledge graph using the new article below.
+
+            Extract only relations between the following entity types:
+            - people
+            - administrative organizations, institutions, NGOs, companies
+            - cities
+            - countries
+            - geographic locations other than countries
+            - events
+            - dates
+            - e-mail addresses
+
+            Rules:
+            - Write entities and relations in English
+            - Do not duplicate relations in reverse order
+            - Preserve existing relations and add new ones
+            - If an entity already exists in the graph, use the same name
+
+            Return the result exactly in this format:
+
+            [RELATIONS]
+            entity_1 -> relation -> entity_2
+
+            Existing knowledge graph:
+            {graph}
+
+            Article title:
+            {title}
+
+            Article text:
+            {text}
+        """),
+    },
+    "typed_2_pl": {
+        "new_graph": _clean("""
+            Zbuduj graf wiedzy na podstawie poniższego artykułu.
+
+            Wyodrębniaj wyłącznie relacje między następującymi typami encji:
+            - osoby (aktorzy, reżyserzy, autorzy, postacie fikcyjne)
+            - organizacje (firmy, instytucje, platformy streamingowe, studia)
+            - dzieła (seriale, filmy, książki, sztuki teatralne)
+            - miasta i kraje
+            - lokalizacje geograficzne inne niż kraj
+            - wydarzenia
+            - daty
+            - adresy mejlowe
+
+            Zasady:
+            - Encje i relacje zapisuj po polsku
+            - Nie duplikuj relacji w odwrotnej kolejności
+            - Wyodrębniaj tylko encje i relacje wprost lub pośrednio wynikające z tekstu
+
+            Zwróć wynik dokładnie w następującym formacie:
+
+            [RELACJE]
+            encja_1 -> relacja -> encja_2
+
+            Przykład:
+            Jakub Kowalski -> jest reżyserem -> Serial XYZ
+            Serial XYZ -> jest produkowany przez -> Studio ABC
+            Serial XYZ -> ma premierę -> 22 maja 2025
+            Studio ABC -> jest dostępne w -> Polsce
+
+            Tytuł artykułu:
+            {title}
+
+            Treść artykułu:
+            {text}
+        """),
+        "existing_graph": _clean("""
+            Zaktualizuj istniejący graf wiedzy na podstawie nowego artykułu.
+
+            Wyodrębniaj wyłącznie relacje między następującymi typami encji:
+            - osoby
+            - organizacje administracyjne, instytucje, NGO, firmy
+            - miasta
+            - kraje
+            - lokalizacje geograficzne inne niż kraj
+            - wydarzenia
+            - daty
+            - adresy mejlowe
+
+            Zasady:
+            - Encje i relacje zapisuj po polsku
+            - Nie duplikuj relacji w odwrotnej kolejności
+            - Zachowaj relacje z istniejącego grafu i dodaj nowe
+            - Jeśli encja już istnieje w grafie, użyj tej samej nazwy
+
+            Zwróć wynik dokładnie w następującym formacie:
+
+            [RELACJE]
+            encja_1 -> relacja -> encja_2
 
             Istniejący graf wiedzy:
             {graph}

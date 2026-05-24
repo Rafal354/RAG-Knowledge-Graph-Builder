@@ -22,6 +22,7 @@ _evaluation_repository = EvaluationRepository()
 class EvaluateRequest(BaseModel):
     graph_id: int
     model: str = "claude-sonnet-4-6"
+    reference_graph_id: int | None = None
     # fallback fields — used only when the graph has no linked article / prompt
     text: str | None = None
     prompt_key: str | None = None
@@ -39,6 +40,14 @@ class EvaluationSummary(BaseModel):
     unsupported_count: int
     missing_count: int
     created_at: str
+    connectivity_score: float | None = None
+    reference_graph_id: int | None = None
+    t_precision: float | None = None
+    t_recall: float | None = None
+    t_f1: float | None = None
+    hallucination_rate: float | None = None
+    omission_rate: float | None = None
+    ged: int | None = None
 
 
 @router.get("/prompts")
@@ -69,6 +78,14 @@ def list_evaluations():
             unsupported_count=e.unsupported_count,
             missing_count=e.missing_count,
             created_at=e.created_at.isoformat(),
+            connectivity_score=e.connectivity_score,
+            reference_graph_id=e.reference_graph_id,
+            t_precision=e.t_precision,
+            t_recall=e.t_recall,
+            t_f1=e.t_f1,
+            hallucination_rate=e.hallucination_rate,
+            omission_rate=e.omission_rate,
+            ged=e.ged,
         )
         for e in entities
     ]
@@ -95,6 +112,14 @@ def get_evaluation(evaluation_id: int):
         ],
         missing_relations=[r.relation for r in entity.missing_relations],
         analysis=entity.analysis,
+        connectivity_score=entity.connectivity_score,
+        reference_graph_id=entity.reference_graph_id,
+        t_precision=entity.t_precision,
+        t_recall=entity.t_recall,
+        t_f1=entity.t_f1,
+        hallucination_rate=entity.hallucination_rate,
+        omission_rate=entity.omission_rate,
+        ged=entity.ged,
     )
 
 
@@ -128,7 +153,15 @@ async def evaluate(request: EvaluateRequest):
     if len(parts) != 2 or parts[0] not in PROMPTS or parts[1] not in PROMPTS[parts[0]]:
         raise HTTPException(status_code=400, detail=f"Unknown prompt key: {prompt_key}")
 
+    reference_graph = None
+    if request.reference_graph_id is not None:
+        reference_graph = _graph_repository.get_graph(request.reference_graph_id)
+        if reference_graph is None:
+            raise HTTPException(status_code=404, detail=f"Reference graph {request.reference_graph_id} not found")
+
     prompt_template = PROMPTS[parts[0]][parts[1]]
-    result = await asyncio.to_thread(_evaluation_service.evaluate, graph, text, prompt_template, request.model)
+    result = await asyncio.to_thread(
+        _evaluation_service.evaluate, graph, text, prompt_template, request.model, reference_graph
+    )
     await asyncio.to_thread(_evaluation_repository.save, result, prompt_key)
     return result
