@@ -2,7 +2,7 @@ from app.kb.prompts import PROMPTS
 
 
 class PromptService:
-    def __init__(self, prompt_set: str = "typed_2_pl"):
+    def __init__(self, prompt_set: str = "filmweb_pl"):
         self.prompt_set = prompt_set
 
     def build_prompt(self, prompt_type: str, **kwargs) -> str:

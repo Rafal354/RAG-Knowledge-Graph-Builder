@@ -584,10 +584,6 @@ function buildEvalResultHtml(data) {
         <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Missing</div>
         <div style="font-size:22px;font-weight:700;color:${rateColor(data.omission_rate)};">${pct(data.omission_rate)}</div>
       </div>
-      <div style="flex:1;background:var(--bg-lighter);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;">
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">GED</div>
-        <div style="font-size:22px;font-weight:700;color:var(--text);">${data.ged}</div>
-      </div>
     </div>` : "";
 
   const verdictsHtml = data.triple_verdicts?.length ? `
@@ -635,8 +631,8 @@ async function loadEvalHistory() {
 
   evalHistoryList.innerHTML = `
     <div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 60px 60px 60px 52px 60px 60px 60px 60px 60px 48px 60px 24px;gap:8px;padding:5px 10px;background:var(--bg-lighter);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">
-        <span>Graf</span><span>Prompt</span><span>Model</span><span>Sędzia</span><span>Prec.</span><span>Recall</span><span>F1</span><span>Hall.</span><span>Connect.</span><span>T-Prec.</span><span>T-Recall</span><span>T-F1</span><span>Unmatch.</span><span>Missing</span><span>GED</span><span></span>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 60px 60px 60px 52px 60px 60px 60px 60px 60px 48px 24px;gap:8px;padding:5px 10px;background:var(--bg-lighter);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">
+        <span>Graf</span><span>Prompt</span><span>Model</span><span>Sędzia</span><span>Prec.</span><span>Recall</span><span>F1</span><span>Hall.</span><span>Connect.</span><span>T-Prec.</span><span>T-Recall</span><span>T-F1</span><span>Unmatch.</span><span>Missing</span><span></span>
       </div>
       ${items.map(e => {
         const g = graphMap[e.graph_id];
@@ -659,15 +655,12 @@ async function loadEvalHistory() {
         const missingCell = e.omission_rate != null
           ? `<span style="font-weight:600;color:${rateColor(e.omission_rate)};">${pct(e.omission_rate)}</span>`
           : `<span style="color:var(--text-muted);">—</span>`;
-        const gedCell = e.ged != null
-          ? `<span style="font-weight:600;color:var(--text);">${e.ged}</span>`
-          : `<span style="color:var(--text-muted);">—</span>`;
         const total = e.supported_count + e.unsupported_count;
         const hallucCell = `<span style="font-weight:600;color:${e.unsupported_count === 0 ? "var(--success)" : e.unsupported_count / total <= 0.3 ? "var(--warning)" : "var(--error)"};">${e.unsupported_count}/${total}</span>`;
         const connCell = e.connectivity_score != null
           ? `<span style="font-weight:600;color:${metricColor(e.connectivity_score)};">${pct(e.connectivity_score)}</span>`
           : `<span style="color:var(--text-muted);">—</span>`;
-        return `<div class="eval-history-row" data-id="${e.id}" data-graph="${graphLabel}" data-prompt="${e.prompt_key}" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 60px 60px 60px 52px 60px 60px 60px 60px 60px 48px 60px 24px;gap:8px;align-items:center;padding:6px 10px;border-top:1px solid var(--border);cursor:pointer;font-size:12px;transition:background 0.1s;">
+        return `<div class="eval-history-row" data-id="${e.id}" data-graph="${graphLabel}" data-prompt="${e.prompt_key}" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 60px 60px 60px 52px 60px 60px 60px 60px 60px 48px 24px;gap:8px;align-items:center;padding:6px 10px;border-top:1px solid var(--border);cursor:pointer;font-size:12px;transition:background 0.1s;">
           <span style="color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${graphLabel}</span>
           <span style="color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.prompt_key}</span>
           <span style="color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${extractModel}</span>
@@ -682,7 +675,6 @@ async function loadEvalHistory() {
           ${tF1Cell}
           ${hallCell}
           ${missingCell}
-          ${gedCell}
           <span class="eval-history-delete" data-id="${e.id}" style="color:var(--text-muted);cursor:pointer;text-align:center;border-radius:3px;padding:1px 3px;font-size:12px;">✕</span>
         </div>`;
       }).join("")}

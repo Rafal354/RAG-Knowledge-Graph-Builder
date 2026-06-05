@@ -241,6 +241,89 @@ PROMPTS: Dict[str, Dict[str, str]] = {
             {text}
         """),
     },
+    "filmweb_pl": {
+        "new_graph": _clean("""
+            Zbuduj graf wiedzy na podstawie poniższego artykułu.
+
+            Wyodrębniaj wyłącznie relacje między następującymi typami encji ze świata rzeczywistego:
+            - osoby (aktorzy, reżyserzy, scenarzyści, producenci, autorzy)
+            - dzieła (seriale, filmy, książki, sztuki teatralne)
+            - organizacje (firmy, studia, platformy streamingowe, instytucje)
+            - miejsca (miasta, kraje, lokalizacje geograficzne)
+            - daty i wydarzenia
+
+            Zasady:
+            - Encje i relacje zapisuj po polsku
+            - Nie duplikuj relacji w odwrotnej kolejności
+            - Pomijaj postacie fikcyjne i relacje między nimi — interesują nas wyłącznie prawdziwi ludzie i ich związki z dziełami, organizacjami i miejscami
+            - Dozwolone relacje osoby do dzieła: gra rolę w, reżyseruje, produkuje, pisze scenariusz do, komponuje muzykę do, jest autorem
+            - Nie wyciągaj relacji wynikających z fabuły lub opisów postaci fikcyjnych
+
+            Zwróć wynik dokładnie w następującym formacie:
+
+            [RELACJE]
+            encja_1 -> relacja -> encja_2
+
+            Przykład poprawnych relacji:
+            Jakub Kowalski -> gra rolę w -> Serial XYZ
+            Serial XYZ -> jest produkowany przez -> Studio ABC
+            Serial XYZ -> ma premierę -> 22 maja 2025
+            Anna Nowak -> reżyseruje -> Serial XYZ
+
+            Przykład relacji których NIE wyodrębniamy:
+            Postać A -> jest mordercą -> Postać B  (relacja fikcyjna)
+            Postać A -> szuka -> Postać B  (relacja fikcyjna)
+
+            Tytuł artykułu:
+            {title}
+
+            Treść artykułu:
+            {text}
+        """),
+        "existing_graph": _clean("""
+            Zaktualizuj istniejący graf wiedzy na podstawie nowego artykułu.
+
+            Wyodrębniaj wyłącznie relacje między następującymi typami encji ze świata rzeczywistego:
+            - osoby (aktorzy, reżyserzy, scenarzyści, producenci, autorzy)
+            - dzieła (seriale, filmy, książki, sztuki teatralne)
+            - organizacje (firmy, studia, platformy streamingowe, instytucje)
+            - miejsca (miasta, kraje, lokalizacje geograficzne)
+            - daty i wydarzenia
+
+            Zasady:
+            - Encje i relacje zapisuj po polsku
+            - Nie duplikuj relacji w odwrotnej kolejności
+            - Pomijaj postacie fikcyjne i relacje między nimi — interesują nas wyłącznie prawdziwi ludzie i ich związki z dziełami, organizacjami i miejscami
+            - Dozwolone relacje osoby do dzieła: gra rolę w, reżyseruje, produkuje, pisze scenariusz do, komponuje muzykę do, jest autorem
+            - Nie wyciągaj relacji wynikających z fabuły lub opisów postaci fikcyjnych
+            - Zachowaj relacje z istniejącego grafu i dodaj nowe
+            - Jeśli encja już istnieje w grafie, użyj tej samej nazwy
+
+            Zwróć wynik dokładnie w następującym formacie:
+
+            [RELACJE]
+            encja_1 -> relacja -> encja_2
+
+            Przykład poprawnych relacji:
+            Jakub Kowalski -> gra rolę w -> Serial XYZ
+            Serial XYZ -> jest produkowany przez -> Studio ABC
+            Serial XYZ -> ma premierę -> 22 maja 2025
+            Anna Nowak -> reżyseruje -> Serial XYZ
+
+            Przykład relacji których NIE wyodrębniamy:
+            Postać A -> jest mordercą -> Postać B  (relacja fikcyjna)
+            Postać A -> szuka -> Postać B  (relacja fikcyjna)
+
+            Istniejący graf wiedzy:
+            {graph}
+
+            Tytuł artykułu:
+            {title}
+
+            Treść artykułu:
+            {text}
+        """),
+    },
     "typed_2_pl": {
         "new_graph": _clean("""
             Zbuduj graf wiedzy na podstawie poniższego artykułu.

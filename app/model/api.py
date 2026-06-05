@@ -12,7 +12,6 @@ router = APIRouter()
 
 LM_STUDIO_BASE_URL = "http://localhost:1234/v1"
 
-
 class ModelRequest(BaseModel):
     model: str
 
