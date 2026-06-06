@@ -22,8 +22,12 @@
     </div>
 
     <div class="col-right">
-      <label for="model-select">Model</label>
-      <select id="model-select">
+      <div class="control-panel">
+        <div class="control-panel-header">Extraction settings</div>
+      <div class="select-row">
+        <div class="select-col">
+          <label for="model-select">Model</label>
+          <select id="model-select">
         <optgroup label="Anthropic">
           <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5</option>
           <option value="claude-sonnet-4-6">Claude Sonnet 4.6</option>
@@ -55,6 +59,24 @@
           <option disabled value="">Loading...</option>
         </optgroup>
       </select>
+        </div>
+        <div class="select-col">
+          <label for="prompt-select">Prompt</label>
+          <div class="prompt-select-row">
+            <select id="prompt-select"><option disabled value="">Loading...</option></select>
+            <div class="prompt-menu-wrap">
+              <button id="prompt-menu-btn" type="button" class="btn-icon btn-secondary" title="Prompt options">&#8943;</button>
+              <div id="prompt-menu" class="prompt-menu hidden">
+                <div class="prompt-menu-item" id="prompt-menu-preview">Preview</div>
+                <div class="prompt-menu-item" id="prompt-menu-add-structured">Add structured</div>
+                <div class="prompt-menu-item" id="prompt-menu-add-custom">Add custom</div>
+                <div class="prompt-menu-separator"></div>
+                <div class="prompt-menu-item prompt-menu-item--danger" id="prompt-menu-delete">Delete</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div class="actions">
         <button id="send-btn" disabled>Send</button>
@@ -62,6 +84,7 @@
       </div>
 
       <div id="status"></div>
+      </div>
     </div>
   </div>
 
@@ -72,17 +95,106 @@
         <button id="manual-cancel-btn" class="modal-close" type="button">&times;</button>
       </div>
       <div class="manual-fields">
-        <input id="manual-title" type="text" placeholder="Title (e.g. my graph)" />
         <div class="manual-file-row">
           <label class="manual-file-label" for="manual-file-input">Load from .txt</label>
           <input id="manual-file-input" type="file" accept=".txt" />
           <span id="manual-file-name"></span>
         </div>
+        <input id="manual-title" type="text" placeholder="Title (e.g. my graph)" />
         <textarea id="manual-relations" rows="12" placeholder="One relation per line:&#10;Entity A -> relation -> Entity B&#10;Entity B -> other relation -> Entity C"></textarea>
       </div>
       <div class="manual-actions">
         <button id="manual-save-btn" type="button">Save graph</button>
         <button id="manual-cancel-btn2" type="button" class="btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="prompt-preview-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h2 style="margin:0;" id="prompt-preview-title">Prompt preview</h2>
+          <div id="prompt-preview-subtitle" style="font-size:11px;color:var(--text-muted);margin-top:2px;"></div>
+        </div>
+        <button id="prompt-preview-close-btn" class="modal-close" type="button">&times;</button>
+      </div>
+      <div id="prompt-preview-config"></div>
+      <div id="prompt-preview-full" class="hidden">
+        <div class="prompt-preview-divider">Full prompt</div>
+        <div id="prompt-preview-full-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="prompt-structured-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Add Structured Prompt</h2>
+        <button id="prompt-structured-cancel-btn" class="modal-close" type="button">&times;</button>
+      </div>
+      <div class="manual-fields">
+        <div class="form-field">
+          <label for="prompt-name-input">Name</label>
+          <input id="prompt-name-input" type="text" placeholder="e.g. News articles PL" />
+        </div>
+        <div class="form-field">
+          <label for="prompt-language-input">Language</label>
+          <select id="prompt-language-input">
+            <option value="pl">Polish (PL)</option>
+            <option value="en">English (EN)</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="prompt-entity-types-input">Entity types <span class="field-hint">(one per line, starting with -)</span></label>
+          <textarea id="prompt-entity-types-input" rows="6" placeholder="- people&#10;- organizations&#10;- cities&#10;- events"></textarea>
+        </div>
+        <div class="form-field">
+          <label for="prompt-rules-input">Rules <span class="field-hint">(one per line, starting with -)</span></label>
+          <textarea id="prompt-rules-input" rows="5" placeholder="- Write entities and relations in English&#10;- Do not duplicate relations in reverse order"></textarea>
+        </div>
+        <div class="form-field">
+          <label for="prompt-examples-positive-input">Examples of correct relations <span class="field-hint">(optional)</span></label>
+          <textarea id="prompt-examples-positive-input" rows="4" placeholder="John Smith -> directed -> Film XYZ&#10;Film XYZ -> produced by -> Studio ABC"></textarea>
+        </div>
+        <div class="form-field">
+          <label for="prompt-examples-negative-input">Examples of relations NOT to extract <span class="field-hint">(optional)</span></label>
+          <textarea id="prompt-examples-negative-input" rows="3" placeholder="Character A -> kills -> Character B  (fictional relation)"></textarea>
+        </div>
+      </div>
+      <div class="manual-actions">
+        <button id="prompt-structured-save-btn" type="button">Save prompt</button>
+        <button id="prompt-structured-cancel-btn2" type="button" class="btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="prompt-custom-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Add Custom Prompt</h2>
+        <button id="prompt-custom-cancel-btn" class="modal-close" type="button">&times;</button>
+      </div>
+      <div class="manual-fields">
+        <div class="form-field">
+          <label for="prompt-custom-name-input">Name</label>
+          <input id="prompt-custom-name-input" type="text" placeholder="e.g. My custom prompt" />
+        </div>
+        <div class="form-field">
+          <label for="prompt-custom-language-input">Language</label>
+          <select id="prompt-custom-language-input">
+            <option value="pl">Polish (PL)</option>
+            <option value="en">English (EN)</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="prompt-custom-content-input">Prompt instructions <span class="field-hint">Article title, text and (for existing graph) graph content will be appended automatically</span></label>
+          <textarea id="prompt-custom-content-input" rows="14" placeholder="Build a knowledge graph from the article below.&#10;&#10;Extract all entities and relations...&#10;&#10;Return the result in this format:&#10;[RELATIONS]&#10;entity_1 -> relation -> entity_2"></textarea>
+        </div>
+      </div>
+      <div class="manual-actions">
+        <button id="prompt-custom-save-btn" type="button">Save prompt</button>
+        <button id="prompt-custom-cancel-btn2" type="button" class="btn-secondary">Cancel</button>
       </div>
     </div>
   </div>
@@ -93,15 +205,17 @@
   </div>
 
   <div id="history-section">
-    <div class="history-header">
-      <h2>Graph History</h2>
-      <div class="history-header-actions">
-        <button id="compare-btn" type="button" class="btn-secondary">Evaluate</button>
-        <button id="manual-toggle-btn" type="button">+ Add manually</button>
-        <button id="load-latest-btn" type="button">Load latest</button>
+    <div class="history-panel">
+      <div class="history-header">
+        <h2>Graph History</h2>
+        <div class="history-header-actions">
+          <button id="compare-btn" type="button" class="btn-secondary">Evaluate</button>
+          <button id="manual-toggle-btn" type="button" class="btn-secondary">+ Add manually</button>
+          <button id="load-latest-btn" type="button" class="btn-secondary">Load latest</button>
+        </div>
       </div>
+      <div id="graph-history"></div>
     </div>
-    <div id="graph-history"></div>
   </div>
 
   <div id="eval-modal" class="modal-overlay hidden">
@@ -148,6 +262,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=41"></script>
+  <script src="script.js?v=42"></script>
 </body>
 </html>

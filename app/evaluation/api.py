@@ -52,13 +52,20 @@ class EvaluationSummary(BaseModel):
 
 @router.get("/prompts")
 def get_prompts():
+    from app.kb.prompt_config_service import prompt_config_service
+    seen = set()
     result = []
     for prompt_set, types in PROMPTS.items():
         for prompt_type in types:
-            result.append({
-                "key": f"{prompt_set}/{prompt_type}",
-                "label": f"{prompt_set} / {prompt_type}",
-            })
+            key = f"{prompt_set}/{prompt_type}"
+            seen.add(key)
+            result.append({"key": key, "label": f"{prompt_set} / {prompt_type}"})
+    for config in prompt_config_service.list_configs():
+        if not config["is_builtin"]:
+            for prompt_type in ("new_graph", "existing_graph"):
+                key = f"{config['key']}/{prompt_type}"
+                if key not in seen:
+                    result.append({"key": key, "label": f"{config['name']} / {prompt_type}"})
     return result
 
 
@@ -150,16 +157,22 @@ async def evaluate(request: EvaluateRequest):
     if not prompt_key:
         raise HTTPException(status_code=400, detail="Graph has no linked prompt. Provide prompt_key manually.")
     parts = prompt_key.split("/", 1)
-    if len(parts) != 2 or parts[0] not in PROMPTS or parts[1] not in PROMPTS[parts[0]]:
-        raise HTTPException(status_code=400, detail=f"Unknown prompt key: {prompt_key}")
+    if len(parts) != 2:
+        raise HTTPException(status_code=400, detail=f"Invalid prompt key format: {prompt_key}")
+    prompt_set, prompt_type = parts
+    if prompt_set in PROMPTS and prompt_type in PROMPTS[prompt_set]:
+        prompt_template = PROMPTS[prompt_set][prompt_type]
+    else:
+        from app.kb.prompt_config_service import prompt_config_service
+        prompt_template = prompt_config_service.get_prompt_content(prompt_key)
+        if prompt_template is None:
+            raise HTTPException(status_code=400, detail=f"Unknown prompt key: {prompt_key}")
 
     reference_graph = None
     if request.reference_graph_id is not None:
         reference_graph = _graph_repository.get_graph(request.reference_graph_id)
         if reference_graph is None:
             raise HTTPException(status_code=404, detail=f"Reference graph {request.reference_graph_id} not found")
-
-    prompt_template = PROMPTS[parts[0]][parts[1]]
     result = await asyncio.to_thread(
         _evaluation_service.evaluate, graph, text, prompt_template, request.model, reference_graph
     )

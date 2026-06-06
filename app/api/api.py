@@ -8,6 +8,7 @@ from fastapi import APIRouter
 from app.articles.model.article_entity import Base
 import app.evaluation.model.evaluation_entity  # noqa: F401
 import app.kb.model.prompt_entity  # noqa: F401
+import app.kb.model.prompt_config_entity  # noqa: F401
 from app.config.database import engine
 from app.config.settings import settings
 from app.kb.knowledge_base_service import knowledge_base_service
@@ -51,6 +52,10 @@ def startup_event():
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS reference_graph_id INTEGER"))
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS hallucination_rate FLOAT"))
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS omission_rate FLOAT"))
+        conn.execute(text("ALTER TABLE prompt_configs ADD COLUMN IF NOT EXISTS examples_positive TEXT"))
+        conn.execute(text("ALTER TABLE prompt_configs ADD COLUMN IF NOT EXISTS examples_negative TEXT"))
+        conn.execute(text("ALTER TABLE prompt_configs ADD COLUMN IF NOT EXISTS mode TEXT NOT NULL DEFAULT 'structured'"))
+        conn.execute(text("ALTER TABLE prompt_configs ADD COLUMN IF NOT EXISTS custom_content TEXT"))
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS t_precision FLOAT"))
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS t_recall FLOAT"))
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS t_f1 FLOAT"))
@@ -94,6 +99,8 @@ def startup_event():
         """))
         conn.commit()
     _seed_prompts()
+    from app.kb.prompt_config_service import prompt_config_service
+    prompt_config_service.seed_builtins()
     global neo4j_service
     neo4j_service = Neo4jService(
         uri=settings.neo4j_uri,

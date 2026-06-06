@@ -38,6 +38,10 @@ class KnowledgeBaseService:
         logger.info("Switching model to: %s", model)
         self.current_model = model
 
+    def set_prompt_set(self, key: str) -> None:
+        logger.info("Switching prompt set to: %s", key)
+        self.prompt_service.prompt_set = key
+
     def get_status(self) -> dict:
         return {"processing": self.processing, "error": self.last_error}
 
@@ -57,7 +61,7 @@ class KnowledgeBaseService:
                 prompt = self.prompt_service.build_prompt(prompt_type, title=title, text=text, graph=graph_text)
             prompt_key = f"{self.prompt_service.prompt_set}/{prompt_type}"
 
-            logger.info("Prompt: %s", prompt)
+            logger.info("Prompt:\n%s", prompt)
 
             if settings.openai_request:
                 if model.startswith("local:"):

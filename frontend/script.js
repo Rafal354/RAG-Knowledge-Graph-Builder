@@ -312,10 +312,11 @@ async function fetchGraphList() {
     header.className = "graph-history-header";
     header.innerHTML =
       `<span class="graph-header-pos" style="width:36px;flex-shrink:0;cursor:pointer;user-select:none;text-align:right">Pos.</span>` +
-      `<span style="width:84px;flex-shrink:0">Date</span>` +
+      `<span style="width:clamp(84px,7vw,120px);flex-shrink:0">Modified</span>` +
       `<span style="flex:1">Article</span>` +
-      `<span style="width:100px;flex-shrink:0">Model</span>` +
-      `<span style="width:28px;text-align:right;flex-shrink:0">#</span>` +
+      `<span style="width:clamp(90px,9vw,160px);flex-shrink:0">Prompt</span>` +
+      `<span style="width:clamp(90px,9vw,160px);flex-shrink:0">Model</span>` +
+      `<span style="width:28px;text-align:right;flex-shrink:0" title="Number of relations">Rel.</span>` +
       `<span style="width:16px;flex-shrink:0"></span>` +
       `<span style="width:16px;flex-shrink:0"></span>`;
     header.querySelector(".graph-header-pos").addEventListener("click", () => {
@@ -337,10 +338,14 @@ async function fetchGraphList() {
         ? g.model.replace(/^local:/, "").split("/").pop()
         : "—";
       const posLabel = g.position ?? "—";
+      const promptSetKey = g.prompt_key ? g.prompt_key.split("/")[0] : null;
+      const promptConfig = promptSetKey ? promptConfigsCache.find(c => c.key === promptSetKey) : null;
+      const promptLabel = promptConfig ? promptConfig.name : (promptSetKey ?? "—");
       item.innerHTML =
         `<span class="graph-item-position" role="button" title="Click to set position">${posLabel}</span>` +
         `<span class="graph-item-meta">${formatGraphDate(g.created_at)}</span>` +
         `<span class="graph-item-title">${g.title ?? "—"}</span>` +
+        `<span class="graph-item-prompt" title="${g.prompt_key ?? ""}">${promptLabel}</span>` +
         `<span class="graph-item-model">${modelLabel}</span>` +
         `<span class="graph-item-count nonzero">${g.relation_count}</span>` +
         `<span class="graph-item-export" role="button" title="Export .txt" data-id="${g.graph_id}">&#8595;</span>` +
@@ -797,9 +802,285 @@ evalRunBtn.addEventListener("click", async () => {
 });
 
 
+// ── Prompt configs ────────────────────────────────────────────────────────────
+
+const promptSelect = document.getElementById("prompt-select");
+
+// — structured modal —
+const promptStructuredModal = document.getElementById("prompt-structured-modal");
+const promptNameInput = document.getElementById("prompt-name-input");
+const promptLanguageInput = document.getElementById("prompt-language-input");
+const promptEntityTypesInput = document.getElementById("prompt-entity-types-input");
+const promptRulesInput = document.getElementById("prompt-rules-input");
+const promptExamplesPositiveInput = document.getElementById("prompt-examples-positive-input");
+const promptExamplesNegativeInput = document.getElementById("prompt-examples-negative-input");
+
+// — custom modal —
+const promptCustomModal = document.getElementById("prompt-custom-modal");
+const promptCustomNameInput = document.getElementById("prompt-custom-name-input");
+const promptCustomLanguageInput = document.getElementById("prompt-custom-language-input");
+const promptCustomContentInput = document.getElementById("prompt-custom-content-input");
+
+const promptMenuBtn = document.getElementById("prompt-menu-btn");
+const promptMenu = document.getElementById("prompt-menu");
+const promptMenuPreview = document.getElementById("prompt-menu-preview");
+const promptMenuAddStructured = document.getElementById("prompt-menu-add-structured");
+const promptMenuAddCustom = document.getElementById("prompt-menu-add-custom");
+const promptMenuDelete = document.getElementById("prompt-menu-delete");
+
+const promptPreviewModal = document.getElementById("prompt-preview-modal");
+const promptPreviewTitle = document.getElementById("prompt-preview-title");
+const promptPreviewSubtitle = document.getElementById("prompt-preview-subtitle");
+const promptPreviewConfig = document.getElementById("prompt-preview-config");
+const promptPreviewFull = document.getElementById("prompt-preview-full");
+const promptPreviewFullContent = document.getElementById("prompt-preview-full-content");
+document.getElementById("prompt-preview-close-btn").addEventListener("click", () => promptPreviewModal.classList.add("hidden"));
+promptPreviewModal.addEventListener("click", (e) => { if (e.target === promptPreviewModal) promptPreviewModal.classList.add("hidden"); });
+
+let promptConfigsCache = [];
+
+function closePromptMenu() { promptMenu.classList.add("hidden"); }
+
+promptMenuBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  promptMenu.classList.toggle("hidden");
+  const config = promptConfigsCache.find(c => c.key === promptSelect.value);
+  promptMenuDelete.classList.toggle("prompt-menu-item--disabled", !config || config.is_builtin);
+});
+
+document.addEventListener("click", (e) => {
+  if (!promptMenu.contains(e.target) && e.target !== promptMenuBtn) closePromptMenu();
+});
+
+promptMenuPreview.addEventListener("click", () => {
+  closePromptMenu();
+  const key = promptSelect.value;
+  const config = promptConfigsCache.find(c => c.key === key);
+  if (!config) return;
+
+  promptPreviewTitle.textContent = config.name;
+  promptPreviewSubtitle.textContent = `${config.language === "pl" ? "Polish" : "English"} · ${config.is_builtin ? "built-in" : "custom"}`;
+
+  const escHtml = s => (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const isCustom = config.mode === "custom";
+
+  if (isCustom) {
+    promptPreviewConfig.innerHTML = `
+      <div class="prompt-preview-section">
+        <div class="prompt-preview-label">Prompt instructions</div>
+        <pre class="prompt-preview-pre">${escHtml(config.custom_content)}</pre>
+      </div>`;
+  } else {
+    const sections = [
+      { label: "Entity types", value: config.entity_types },
+      { label: "Rules", value: config.rules },
+      config.examples_positive ? { label: "Examples — correct relations", value: config.examples_positive } : null,
+      config.examples_negative ? { label: "Examples — NOT to extract", value: config.examples_negative } : null,
+    ].filter(Boolean);
+    promptPreviewConfig.innerHTML = sections
+      .map(s => `<div class="prompt-preview-section"><div class="prompt-preview-label">${s.label}</div><pre class="prompt-preview-pre">${escHtml(s.value)}</pre></div>`)
+      .join("");
+  }
+
+  promptPreviewFull.classList.add("hidden");
+  promptPreviewFullContent.innerHTML = `<div class="prompt-preview-section"><div class="prompt-preview-label">Loading…</div></div>`;
+  promptPreviewModal.classList.remove("hidden");
+
+  fetch(`${API_BASE_URL}/prompt-configs/${key}/content`)
+    .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    .then(data => {
+      promptPreviewFullContent.innerHTML = `
+        <div class="prompt-preview-section">
+          <pre class="prompt-preview-pre">${escHtml(data.new_graph)}</pre>
+        </div>`;
+      promptPreviewFull.classList.remove("hidden");
+    })
+    .catch(() => {
+      promptPreviewFullContent.innerHTML = `<div class="prompt-preview-section"><div class="prompt-preview-label">Failed to load</div></div>`;
+      promptPreviewFull.classList.remove("hidden");
+    });
+});
+
+promptMenuAddStructured.addEventListener("click", () => {
+  closePromptMenu();
+  promptStructuredModal.classList.remove("hidden");
+});
+
+promptMenuAddCustom.addEventListener("click", () => {
+  closePromptMenu();
+  promptCustomModal.classList.remove("hidden");
+});
+
+promptMenuDelete.addEventListener("click", async () => {
+  closePromptMenu();
+  const key = promptSelect.value;
+  const config = promptConfigsCache.find(c => c.key === key);
+  if (!config || config.is_builtin) return;
+  if (!confirm(`Delete prompt '${config.name}'?`)) return;
+  try {
+    const res = await fetch(`${API_BASE_URL}/prompt-configs/${key}`, { method: "DELETE" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    setStatus(`Prompt '${config.name}' deleted`, "ok");
+    await fetchPromptConfigs();
+  } catch (err) {
+    setStatus("Error deleting prompt: " + err.message, "error");
+  }
+});
+
+function closeStructuredModal() {
+  promptStructuredModal.classList.add("hidden");
+  promptNameInput.value = "";
+  promptLanguageInput.value = "pl";
+  promptEntityTypesInput.value = "";
+  promptRulesInput.value = "";
+  promptExamplesPositiveInput.value = "";
+  promptExamplesNegativeInput.value = "";
+}
+
+function closeCustomModal() {
+  promptCustomModal.classList.add("hidden");
+  promptCustomNameInput.value = "";
+  promptCustomLanguageInput.value = "pl";
+  promptCustomContentInput.value = "";
+}
+
+document.getElementById("prompt-structured-cancel-btn").addEventListener("click", closeStructuredModal);
+document.getElementById("prompt-structured-cancel-btn2").addEventListener("click", closeStructuredModal);
+promptStructuredModal.addEventListener("click", (e) => { if (e.target === promptStructuredModal) closeStructuredModal(); });
+
+document.getElementById("prompt-custom-cancel-btn").addEventListener("click", closeCustomModal);
+document.getElementById("prompt-custom-cancel-btn2").addEventListener("click", closeCustomModal);
+promptCustomModal.addEventListener("click", (e) => { if (e.target === promptCustomModal) closeCustomModal(); });
+
+async function savePromptConfig(payload, saveBtn, closeFn) {
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Saving...";
+  try {
+    const res = await fetch(`${API_BASE_URL}/prompt-configs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.detail || "HTTP " + res.status);
+    }
+    const created = await res.json();
+    closeFn();
+    setStatus(`Prompt '${created.name}' created`, "ok");
+    await fetchPromptConfigs();
+    promptSelect.value = created.key;
+    await applyPromptSet(created.key);
+  } catch (err) {
+    setStatus("Error creating prompt: " + err.message, "error");
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Save prompt";
+  }
+}
+
+document.getElementById("prompt-structured-save-btn").addEventListener("click", () => {
+  const name = promptNameInput.value.trim();
+  const entityTypes = promptEntityTypesInput.value.trim();
+  const rules = promptRulesInput.value.trim();
+  if (!name) { setStatus("Prompt name is required", "error"); return; }
+  if (!entityTypes) { setStatus("Entity types are required", "error"); return; }
+  if (!rules) { setStatus("Rules are required", "error"); return; }
+  savePromptConfig({
+    name,
+    language: promptLanguageInput.value,
+    mode: "structured",
+    entity_types: entityTypes,
+    rules,
+    examples_positive: promptExamplesPositiveInput.value.trim() || null,
+    examples_negative: promptExamplesNegativeInput.value.trim() || null,
+  }, document.getElementById("prompt-structured-save-btn"), closeStructuredModal);
+});
+
+document.getElementById("prompt-custom-save-btn").addEventListener("click", () => {
+  const name = promptCustomNameInput.value.trim();
+  const customContent = promptCustomContentInput.value.trim();
+  if (!name) { setStatus("Prompt name is required", "error"); return; }
+  if (!customContent) { setStatus("Prompt instructions are required", "error"); return; }
+  savePromptConfig({
+    name,
+    language: promptCustomLanguageInput.value,
+    mode: "custom",
+    entity_types: "",
+    rules: "",
+    custom_content: customContent,
+  }, document.getElementById("prompt-custom-save-btn"), closeCustomModal);
+});
+
+async function applyPromptSet(key) {
+  try {
+    await fetch(`${API_BASE_URL}/prompt-set`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key }),
+    });
+  } catch (err) {
+    console.error("Failed to set prompt set:", err);
+  }
+}
+
+promptSelect.addEventListener("change", async () => {
+  if (!promptSelect.value) return;
+  await applyPromptSet(promptSelect.value);
+});
+
+async function fetchPromptConfigs() {
+  try {
+    const [configsRes, currentRes] = await Promise.all([
+      fetch(`${API_BASE_URL}/prompt-configs`),
+      fetch(`${API_BASE_URL}/prompt-set`),
+    ]);
+
+    if (!configsRes.ok) return;
+    promptConfigsCache = await configsRes.json();
+    const currentKey = currentRes.ok ? (await currentRes.json()).key : null;
+
+    promptSelect.innerHTML = "";
+
+    const builtins = promptConfigsCache.filter(c => c.is_builtin);
+    const custom = promptConfigsCache.filter(c => !c.is_builtin);
+
+    if (builtins.length > 0) {
+      const grp = document.createElement("optgroup");
+      grp.label = "Built-in";
+      builtins.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.key;
+        opt.textContent = c.name;
+        grp.appendChild(opt);
+      });
+      promptSelect.appendChild(grp);
+    }
+
+    if (custom.length > 0) {
+      const grp = document.createElement("optgroup");
+      grp.label = "Custom";
+      custom.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.key;
+        opt.textContent = c.name;
+        grp.appendChild(opt);
+      });
+      promptSelect.appendChild(grp);
+    }
+
+    if (currentKey) promptSelect.value = currentKey;
+  } catch (err) {
+    console.error("Failed to fetch prompt configs:", err);
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
 fetchLocalModels().then(fetchCurrentModel);
 fetchGraphList();
 renderGraph();
+fetchPromptConfigs();
 
 // na start blokujemy przycisk
 sendBtn.disabled = true;
@@ -840,7 +1121,16 @@ function handleFile(file) {
     previewEl.textContent =
       currentText.slice(0, 1000) + (currentText.length > 1000 ? "…" : "");
 
-    titleEl.innerHTML = `<span>${file.name.replace(/\.txt$/i, "").trim()}</span>`;
+    titleEl.innerHTML = `<span>${file.name.replace(/\.txt$/i, "").trim()}</span><button class="title-clear-btn" type="button" title="Clear">&times;</button>`;
+    titleEl.querySelector(".title-clear-btn").addEventListener("click", (e) => {
+      e.stopPropagation();
+      currentText = "";
+      currentFileName = "";
+      fileInput.value = "";
+      previewEl.textContent = "";
+      titleEl.innerHTML = "";
+      sendBtn.disabled = true;
+    });
 
     sendBtn.disabled = currentText.trim().length === 0;
   };
