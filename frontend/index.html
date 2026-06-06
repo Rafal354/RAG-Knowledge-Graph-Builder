@@ -226,20 +226,21 @@
         <button id="eval-close-btn" class="modal-close" type="button">&times;</button>
       </div>
       <div style="display:flex;gap:16px;margin-bottom:16px;align-items:flex-end;">
-        <div style="flex:3;">
-          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Graf</label>
+        <div style="flex:1 1 0%;min-width:0;">
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Graph</label>
           <select id="eval-graph-a" style="width:100%;"></select>
         </div>
-        <div style="flex:3;">
-          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Graf referencyjny (opcjonalnie)</label>
+        <div style="flex:1 1 0%;min-width:0;">
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Reference graph <span style="opacity:0.6">(optional)</span></label>
           <select id="eval-ref-graph" style="width:100%;"></select>
         </div>
-        <div style="flex:2;">
-          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Model sędziego</label>
+        <div style="flex:0 0 180px;">
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Judge model</label>
           <select id="eval-model" style="width:100%;"></select>
         </div>
         <div style="flex:0 0 auto;">
-          <button id="eval-run-btn" type="button" style="width:auto;padding:7px 20px;font-size:13px;">Run</button>
+          <label style="font-size:11px;display:block;margin-bottom:4px;visibility:hidden">_</label>
+          <button id="eval-run-btn" type="button" style="width:auto;">Run</button>
         </div>
       </div>
       <div id="eval-results"></div>

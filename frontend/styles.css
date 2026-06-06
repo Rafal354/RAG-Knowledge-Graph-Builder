@@ -211,9 +211,33 @@ label {
   margin-bottom: 0;
 }
 
-/* ── Native select (hidden backing store) ── */
+/* ── Native select (base styles) ── */
 
-select { display: none; }
+select {
+  width: 100%;
+  padding: 8px 28px 8px 10px;
+  font-size: 13px;
+  background: var(--bg-light);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23aaa' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+select.custom-select__native { display: none; }
 
 /* ── Custom select ── */
 
@@ -503,7 +527,7 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 14px;
+  padding: 0 14px 0 17px;
   height: 28px;
   background: var(--bg-lighter);
   border-bottom: 1px solid var(--border);
@@ -542,7 +566,7 @@ button:disabled {
 
 .graph-item.active {
   border-left-color: var(--accent);
-  background: #162032;
+  background: rgba(154, 122, 30, 0.18);
 }
 
 .graph-item.graph-empty {
@@ -662,31 +686,7 @@ button:disabled {
   padding: 16px 0;
 }
 
-.graph-item-export {
-  flex: 0 0 16px;
-  width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  font-size: 13px;
-  cursor: pointer;
-  border-radius: 3px;
-  opacity: 0;
-  transition: opacity 0.15s, color 0.15s, background 0.15s;
-  user-select: none;
-}
-
-.graph-item:hover .graph-item-export {
-  opacity: 1;
-}
-
-.graph-item-export:hover {
-  color: var(--accent-light) !important;
-  background: #0f1f3d !important;
-}
-
+.graph-item-export,
 .graph-item-delete {
   flex: 0 0 16px;
   width: 16px;
@@ -698,12 +698,14 @@ button:disabled {
   font-size: 13px;
   cursor: pointer;
   border-radius: 3px;
-  opacity: 0;
+  opacity: 0.45;
   transition: opacity 0.15s, color 0.15s, background 0.15s;
   user-select: none;
 }
 
-.graph-item:hover .graph-item-delete {
+.graph-item-export:hover {
+  color: var(--accent-light) !important;
+  background: rgba(154, 122, 30, 0.18) !important;
   opacity: 1;
 }
 
@@ -744,7 +746,7 @@ button:disabled {
 }
 
 .modal--wide {
-  width: 1200px;
+  width: min(1400px, 92vw);
 }
 
 .modal-header {

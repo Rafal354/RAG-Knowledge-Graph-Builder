@@ -7,6 +7,7 @@ const API_BASE_URL =
 class CustomSelect {
   constructor(nativeSelect) {
     this.native = nativeSelect;
+    nativeSelect.classList.add("custom-select__native");
 
     this.wrapper = document.createElement("div");
     this.wrapper.className = "custom-select";
@@ -115,6 +116,9 @@ const titleEl = document.getElementById("title");
 const sendBtn = document.getElementById("send-btn");
 const modelSelect = document.getElementById("model-select");
 const modelSelectCustom = new CustomSelect(modelSelect);
+const evalGraphCustom = new CustomSelect(document.getElementById("eval-graph-a"));
+const evalRefGraphCustom = new CustomSelect(document.getElementById("eval-ref-graph"));
+const evalModelCustom = new CustomSelect(document.getElementById("eval-model"));
 const clearGraphBtn = document.getElementById("clear-graph-btn");
 const loadLatestBtn = document.getElementById("load-latest-btn");
 const manualToggleBtn = document.getElementById("manual-toggle-btn");
@@ -222,9 +226,9 @@ async function renderGraph(highlightNew = false, graphId = null) {
       nodes: {
         shape: "box",
         color: {
-          background: "#3b82f6",
-          border: "#60a5fa",
-          highlight: { background: "#60a5fa", border: "#93c5fd" },
+          background: "#9a7a1e",
+          border: "#b8962e",
+          highlight: { background: "#b8962e", border: "#d4af55" },
         },
         font: { color: "#e5e5e5", size: 13 },
         margin: 8,
@@ -416,14 +420,13 @@ async function fetchGraphList() {
     const header = document.createElement("div");
     header.className = "graph-history-header";
     header.innerHTML =
-      `<span class="graph-header-pos" style="width:36px;flex-shrink:0;cursor:pointer;user-select:none;text-align:right">Lp.</span>` +
+      `<span class="graph-header-pos" style="width:36px;flex-shrink:0;cursor:pointer;user-select:none;text-align:right">#</span>` +
       `<span style="flex:1">Article</span>` +
       `<span style="width:clamp(120px,10vw,150px);flex-shrink:0">Modified</span>` +
       `<span style="width:clamp(90px,9vw,160px);flex-shrink:0">Prompt</span>` +
       `<span style="width:clamp(90px,9vw,160px);flex-shrink:0">Model</span>` +
-      `<span style="width:28px;text-align:right;flex-shrink:0" title="Number of relations">Rel.</span>` +
-      `<span style="width:16px;flex-shrink:0"></span>` +
-      `<span style="width:16px;flex-shrink:0"></span>`;
+      `<span style="width:72px;flex-shrink:0;text-align:right">Relations</span>` +
+      `<span style="width:0;flex-shrink:0"></span>`;
     header.querySelector(".graph-header-pos").addEventListener("click", () => {
       sortDirection = sortDirection === "desc" ? "asc" : "desc";
       fetchGraphList();
@@ -866,6 +869,10 @@ async function openEvalModal() {
   const selEvalModel = document.getElementById("eval-model");
   selEvalModel.innerHTML = document.getElementById("model-select").innerHTML;
 
+  evalGraphCustom.build();
+  evalRefGraphCustom.build();
+  evalModelCustom.build();
+
   await loadEvalHistory();
 }
 
@@ -878,9 +885,9 @@ evalDetailClose.addEventListener("click", () => evalDetailModal.classList.add("h
 evalDetailModal.addEventListener("click", (e) => { if (e.target === evalDetailModal) evalDetailModal.classList.add("hidden"); });
 
 evalRunBtn.addEventListener("click", async () => {
-  const graphId = parseInt(document.getElementById("eval-graph-a").value);
-  const evalModel = document.getElementById("eval-model").value;
-  const refVal = document.getElementById("eval-ref-graph").value;
+  const graphId = parseInt(evalGraphCustom.value);
+  const evalModel = evalModelCustom.value;
+  const refVal = evalRefGraphCustom.value;
   const referenceGraphId = refVal ? parseInt(refVal) : null;
 
   if (!graphId) { evalResults.innerHTML = "<div style='color:var(--error);font-size:13px;'>Select a graph.</div>"; return; }
