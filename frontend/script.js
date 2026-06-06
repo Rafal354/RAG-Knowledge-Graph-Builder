@@ -4,15 +4,110 @@ const API_BASE_URL =
     ? "/api"
     : "http://localhost:8000";
 
+class CustomSelect {
+  constructor(nativeSelect) {
+    this.native = nativeSelect;
+
+    this.wrapper = document.createElement("div");
+    this.wrapper.className = "custom-select";
+    nativeSelect.parentNode.insertBefore(this.wrapper, nativeSelect);
+    this.wrapper.appendChild(nativeSelect);
+
+    this.trigger = document.createElement("button");
+    this.trigger.type = "button";
+    this.trigger.className = "custom-select__trigger";
+    this.trigger.innerHTML = `<span class="custom-select__value"></span><span class="custom-select__arrow">▾</span>`;
+    this.wrapper.appendChild(this.trigger);
+
+    // Dropdown lives on <body> so it's above all stacking contexts
+    this.dropdown = document.createElement("div");
+    this.dropdown.className = "custom-select__dropdown hidden";
+    document.body.appendChild(this.dropdown);
+
+    this.trigger.addEventListener("click", (e) => { e.stopPropagation(); this.toggle(); });
+    document.addEventListener("click", (e) => {
+      if (!this.wrapper.contains(e.target) && !this.dropdown.contains(e.target)) this.close();
+    });
+    window.addEventListener("scroll", () => { if (!this.dropdown.classList.contains("hidden")) this._reposition(); }, true);
+    window.addEventListener("resize", () => { if (!this.dropdown.classList.contains("hidden")) this._reposition(); });
+
+    this.build();
+  }
+
+  get value() { return this.native.value; }
+  set value(v) { this.native.value = v; this.syncDisplay(); }
+
+  _reposition() {
+    const r = this.trigger.getBoundingClientRect();
+    this.dropdown.style.top = `${r.bottom + window.scrollY + 4}px`;
+    this.dropdown.style.left = `${r.left + window.scrollX}px`;
+    this.dropdown.style.width = `${r.width}px`;
+  }
+
+  build() {
+    this.dropdown.innerHTML = "";
+    Array.from(this.native.children).forEach(child => {
+      if (child.tagName === "OPTGROUP") {
+        const lbl = document.createElement("div");
+        lbl.className = "custom-select__group";
+        lbl.textContent = child.label;
+        this.dropdown.appendChild(lbl);
+        Array.from(child.children).forEach(opt => this._addOption(opt));
+      } else if (child.tagName === "OPTION") {
+        this._addOption(child);
+      }
+    });
+    this.syncDisplay();
+  }
+
+  _addOption(opt) {
+    if (opt.disabled) return;
+    const item = document.createElement("div");
+    item.className = "custom-select__option";
+    item.dataset.value = opt.value;
+    item.textContent = opt.textContent.trim();
+    item.addEventListener("click", () => {
+      this.native.value = opt.value;
+      this.native.dispatchEvent(new Event("change", { bubbles: true }));
+      this.syncDisplay();
+      this.close();
+    });
+    this.dropdown.appendChild(item);
+  }
+
+  syncDisplay() {
+    const sel = this.native.options[this.native.selectedIndex];
+    this.trigger.querySelector(".custom-select__value").textContent = sel ? sel.textContent.trim() : "";
+    this.dropdown.querySelectorAll(".custom-select__option").forEach(el => {
+      el.classList.toggle("custom-select__option--selected", el.dataset.value === this.native.value);
+    });
+  }
+
+  toggle() {
+    if (!this.dropdown.classList.contains("hidden")) { this.close(); } else { this.open(); }
+  }
+
+  open() {
+    this._reposition();
+    this.dropdown.classList.remove("hidden");
+    this.wrapper.classList.add("custom-select--open");
+  }
+
+  close() {
+    this.dropdown.classList.add("hidden");
+    this.wrapper.classList.remove("custom-select--open");
+  }
+}
+
 const dropZone = document.getElementById("drop-zone");
 const fileInput = document.getElementById("file-input");
 const previewEl = document.getElementById("preview");
 const titleEl = document.getElementById("title");
 const sendBtn = document.getElementById("send-btn");
 const modelSelect = document.getElementById("model-select");
+const modelSelectCustom = new CustomSelect(modelSelect);
 const clearGraphBtn = document.getElementById("clear-graph-btn");
 const loadLatestBtn = document.getElementById("load-latest-btn");
-const statusEl = document.getElementById("status");
 const manualToggleBtn = document.getElementById("manual-toggle-btn");
 const manualModal = document.getElementById("manual-modal");
 const manualTitleInput = document.getElementById("manual-title");
@@ -25,7 +120,6 @@ const manualFileName = document.getElementById("manual-file-name");
 
 let currentText = "";
 let currentFileName = "";
-let statusTimeout;
 let sortDirection = "desc";
 
 const NEW_EDGE_HIGHLIGHT_MS = 15000;
@@ -270,15 +364,17 @@ async function fetchLocalModels() {
     console.error("Failed to fetch local models:", err);
     group.innerHTML = '<option disabled value="">Not available</option>';
   }
+  modelSelectCustom.build();
 }
 
 function formatGraphDate(isoStr) {
   const dt = new Date(isoStr);
-  const day = String(dt.getDate()).padStart(2, "0");
+  const day   = String(dt.getDate()).padStart(2, "0");
   const month = String(dt.getMonth() + 1).padStart(2, "0");
-  const hour = String(dt.getHours()).padStart(2, "0");
-  const min = String(dt.getMinutes()).padStart(2, "0");
-  return `${day}.${month} ${hour}:${min}`;
+  const year  = dt.getFullYear();
+  const hour  = String(dt.getHours()).padStart(2, "0");
+  const min   = String(dt.getMinutes()).padStart(2, "0");
+  return `${day}.${month}.${year} ${hour}:${min}`;
 }
 
 async function fetchGraphList() {
@@ -311,9 +407,9 @@ async function fetchGraphList() {
     const header = document.createElement("div");
     header.className = "graph-history-header";
     header.innerHTML =
-      `<span class="graph-header-pos" style="width:36px;flex-shrink:0;cursor:pointer;user-select:none;text-align:right">Pos.</span>` +
-      `<span style="width:clamp(84px,7vw,120px);flex-shrink:0">Modified</span>` +
+      `<span class="graph-header-pos" style="width:36px;flex-shrink:0;cursor:pointer;user-select:none;text-align:right">Lp.</span>` +
       `<span style="flex:1">Article</span>` +
+      `<span style="width:clamp(120px,10vw,150px);flex-shrink:0">Modified</span>` +
       `<span style="width:clamp(90px,9vw,160px);flex-shrink:0">Prompt</span>` +
       `<span style="width:clamp(90px,9vw,160px);flex-shrink:0">Model</span>` +
       `<span style="width:28px;text-align:right;flex-shrink:0" title="Number of relations">Rel.</span>` +
@@ -343,8 +439,8 @@ async function fetchGraphList() {
       const promptLabel = promptConfig ? promptConfig.name : (promptSetKey ?? "—");
       item.innerHTML =
         `<span class="graph-item-position" role="button" title="Click to set position">${posLabel}</span>` +
-        `<span class="graph-item-meta">${formatGraphDate(g.created_at)}</span>` +
         `<span class="graph-item-title">${g.title ?? "—"}</span>` +
+        `<span class="graph-item-meta">${formatGraphDate(g.created_at)}</span>` +
         `<span class="graph-item-prompt" title="${g.prompt_key ?? ""}">${promptLabel}</span>` +
         `<span class="graph-item-model">${modelLabel}</span>` +
         `<span class="graph-item-count nonzero">${g.relation_count}</span>` +
@@ -445,6 +541,7 @@ async function fetchCurrentModel() {
     const res = await fetch(`${API_BASE_URL}/model`);
     const data = await res.json();
     modelSelect.value = data.model;
+    modelSelectCustom.syncDisplay();
   } catch (err) {
     console.error("Failed to fetch current model:", err);
   }
@@ -805,6 +902,7 @@ evalRunBtn.addEventListener("click", async () => {
 // ── Prompt configs ────────────────────────────────────────────────────────────
 
 const promptSelect = document.getElementById("prompt-select");
+const promptSelectCustom = new CustomSelect(promptSelect);
 
 // — structured modal —
 const promptStructuredModal = document.getElementById("prompt-structured-modal");
@@ -970,6 +1068,7 @@ async function savePromptConfig(payload, saveBtn, closeFn) {
     setStatus(`Prompt '${created.name}' created`, "ok");
     await fetchPromptConfigs();
     promptSelect.value = created.key;
+    promptSelectCustom.syncDisplay();
     await applyPromptSet(created.key);
   } catch (err) {
     setStatus("Error creating prompt: " + err.message, "error");
@@ -1070,6 +1169,7 @@ async function fetchPromptConfigs() {
     }
 
     if (currentKey) promptSelect.value = currentKey;
+    promptSelectCustom.build();
   } catch (err) {
     console.error("Failed to fetch prompt configs:", err);
   }
@@ -1085,23 +1185,29 @@ fetchPromptConfigs();
 // na start blokujemy przycisk
 sendBtn.disabled = true;
 
-function resetStatus() {
-  clearTimeout(statusTimeout);
-  statusEl.textContent = "";
-  statusEl.className = "";
+const toastContainer = document.getElementById("toast-container");
+const TOAST_ICONS = { ok: "✓", error: "✕", info: "ℹ" };
+const TOAST_DURATION = { ok: 4000, error: 6000, info: 4000 };
+
+function setStatus(message, type = "info") {
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `
+    <span class="toast__icon">${TOAST_ICONS[type] ?? ""}</span>
+    <span class="toast__msg">${message}</span>
+    <button class="toast__close" aria-label="Dismiss">&times;</button>`;
+
+  const dismiss = () => {
+    toast.classList.add("toast--out");
+    toast.addEventListener("animationend", () => toast.remove(), { once: true });
+  };
+
+  toast.querySelector(".toast__close").addEventListener("click", dismiss);
+  toastContainer.appendChild(toast);
+  setTimeout(dismiss, TOAST_DURATION[type] ?? 4000);
 }
 
-function setStatus(message, type) {
-  clearTimeout(statusTimeout);
-
-  statusEl.textContent = message;
-  statusEl.className = type;
-
-  statusTimeout = setTimeout(() => {
-    statusEl.textContent = "";
-    statusEl.className = "";
-  }, 5000);
-}
+function resetStatus() {}
 
 function handleFile(file) {
   if (!file) return;
