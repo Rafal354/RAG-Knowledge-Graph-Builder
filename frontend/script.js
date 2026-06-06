@@ -24,7 +24,16 @@ class CustomSelect {
     this.dropdown.className = "custom-select__dropdown hidden";
     document.body.appendChild(this.dropdown);
 
+    this._leaveTimer = null;
+    const scheduleClose = () => { this._leaveTimer = setTimeout(() => this.close(), 120); };
+    const cancelClose  = () => { clearTimeout(this._leaveTimer); };
+
     this.trigger.addEventListener("click", (e) => { e.stopPropagation(); this.toggle(); });
+    this.wrapper.addEventListener("mouseenter", cancelClose);
+    this.wrapper.addEventListener("mouseleave", scheduleClose);
+    this.dropdown.addEventListener("mouseenter", cancelClose);
+    this.dropdown.addEventListener("mouseleave", scheduleClose);
+
     document.addEventListener("click", (e) => {
       if (!this.wrapper.contains(e.target) && !this.dropdown.contains(e.target)) this.close();
     });
