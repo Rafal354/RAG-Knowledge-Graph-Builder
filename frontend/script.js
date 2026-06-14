@@ -877,6 +877,7 @@ async function openEvalModal() {
 
   const selEvalModel = document.getElementById("eval-model");
   selEvalModel.innerHTML = document.getElementById("model-select").innerHTML;
+  selEvalModel.value = "claude-sonnet-4-6";
 
   evalGraphCustom.build();
   evalRefGraphCustom.build();
