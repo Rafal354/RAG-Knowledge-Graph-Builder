@@ -929,11 +929,60 @@ const promptRulesInput = document.getElementById("prompt-rules-input");
 const promptExamplesPositiveInput = document.getElementById("prompt-examples-positive-input");
 const promptExamplesNegativeInput = document.getElementById("prompt-examples-negative-input");
 
+const PROMPT_FIELD_DEFAULTS = {
+  pl: {
+    entityTypes: "- osoby\n- organizacje\n- miasta\n- wydarzenia",
+    rules: "- Encje i relacje zapisuj po polsku\n- Nie duplikuj relacji w odwrotnej kolejności",
+    examplesPositive: "Jakub Kowalski -> reżyseruje -> Serial XYZ\nSerial XYZ -> jest produkowany przez -> Studio ABC",
+    examplesNegative: "Postać A -> zabija -> Postać B  (relacja fikcyjna)",
+  },
+  en: {
+    entityTypes: "- people\n- organizations\n- cities\n- events",
+    rules: "- Write entities and relations in English\n- Do not duplicate relations in reverse order",
+    examplesPositive: "John Smith -> directed -> Film XYZ\nFilm XYZ -> produced by -> Studio ABC",
+    examplesNegative: "Character A -> kills -> Character B  (fictional relation)",
+  },
+};
+
+function applyPromptLanguageDefaults() {
+  const lang = promptLanguageInput.value === "en" ? "en" : "pl";
+  const other = lang === "en" ? "pl" : "en";
+  const defaults = PROMPT_FIELD_DEFAULTS[lang];
+  const otherDefaults = PROMPT_FIELD_DEFAULTS[other];
+
+  if (!promptEntityTypesInput.value || promptEntityTypesInput.value === otherDefaults.entityTypes) {
+    promptEntityTypesInput.value = defaults.entityTypes;
+  }
+  if (!promptRulesInput.value || promptRulesInput.value === otherDefaults.rules) {
+    promptRulesInput.value = defaults.rules;
+  }
+  promptExamplesPositiveInput.placeholder = defaults.examplesPositive;
+  promptExamplesNegativeInput.placeholder = defaults.examplesNegative;
+}
+
+promptLanguageInput.addEventListener("change", applyPromptLanguageDefaults);
+
 // — custom modal —
 const promptCustomModal = document.getElementById("prompt-custom-modal");
 const promptCustomNameInput = document.getElementById("prompt-custom-name-input");
 const promptCustomLanguageInput = document.getElementById("prompt-custom-language-input");
 const promptCustomContentInput = document.getElementById("prompt-custom-content-input");
+
+const CUSTOM_PROMPT_DEFAULTS = {
+  pl: "Zbuduj graf wiedzy na podstawie poniższego artykułu.\n\nWyodrębnij wszystkie encje i relacje występujące w tekście.\n\nZwróć wynik w tym formacie:\n[RELACJE]\nencja_1 -> relacja -> encja_2",
+  en: "Build a knowledge graph from the article below.\n\nExtract all entities and relations mentioned in the text.\n\nReturn the result in this format:\n[RELATIONS]\nentity_1 -> relation -> entity_2",
+};
+
+function applyCustomPromptLanguageDefault() {
+  const lang = promptCustomLanguageInput.value === "en" ? "en" : "pl";
+  const other = lang === "en" ? "pl" : "en";
+
+  if (!promptCustomContentInput.value || promptCustomContentInput.value === CUSTOM_PROMPT_DEFAULTS[other]) {
+    promptCustomContentInput.value = CUSTOM_PROMPT_DEFAULTS[lang];
+  }
+}
+
+promptCustomLanguageInput.addEventListener("change", applyCustomPromptLanguageDefault);
 
 const promptMenuBtn = document.getElementById("prompt-menu-btn");
 const promptMenu = document.getElementById("prompt-menu");
@@ -1018,11 +1067,13 @@ promptMenuPreview.addEventListener("click", () => {
 promptMenuAddStructured.addEventListener("click", () => {
   closePromptMenu();
   promptStructuredModal.classList.remove("hidden");
+  applyPromptLanguageDefaults();
 });
 
 promptMenuAddCustom.addEventListener("click", () => {
   closePromptMenu();
   promptCustomModal.classList.remove("hidden");
+  applyCustomPromptLanguageDefault();
 });
 
 promptMenuDelete.addEventListener("click", async () => {

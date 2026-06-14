@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Knowledge Graph Builder</title>
-  <link rel="stylesheet" href="styles.css?v=12" />
+  <link rel="stylesheet" href="styles.css?v=13" />
   <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
 </head>
 <body>
@@ -148,19 +148,19 @@
         </div>
         <div class="form-field">
           <label for="prompt-entity-types-input">Entity types <span class="field-hint">(one per line, starting with -)</span></label>
-          <textarea id="prompt-entity-types-input" rows="6" placeholder="- people&#10;- organizations&#10;- cities&#10;- events"></textarea>
+          <textarea id="prompt-entity-types-input" rows="6"></textarea>
         </div>
         <div class="form-field">
           <label for="prompt-rules-input">Rules <span class="field-hint">(one per line, starting with -)</span></label>
-          <textarea id="prompt-rules-input" rows="5" placeholder="- Write entities and relations in English&#10;- Do not duplicate relations in reverse order"></textarea>
+          <textarea id="prompt-rules-input" rows="5"></textarea>
         </div>
         <div class="form-field">
           <label for="prompt-examples-positive-input">Examples of correct relations <span class="field-hint">(optional)</span></label>
-          <textarea id="prompt-examples-positive-input" rows="4" placeholder="John Smith -> directed -> Film XYZ&#10;Film XYZ -> produced by -> Studio ABC"></textarea>
+          <textarea id="prompt-examples-positive-input" rows="4"></textarea>
         </div>
         <div class="form-field">
           <label for="prompt-examples-negative-input">Examples of relations NOT to extract <span class="field-hint">(optional)</span></label>
-          <textarea id="prompt-examples-negative-input" rows="3" placeholder="Character A -> kills -> Character B  (fictional relation)"></textarea>
+          <textarea id="prompt-examples-negative-input" rows="3"></textarea>
         </div>
       </div>
       <div class="manual-actions">
@@ -189,8 +189,8 @@
           </select>
         </div>
         <div class="form-field">
-          <label for="prompt-custom-content-input">Prompt instructions <span class="field-hint">Article title, text and (for existing graph) graph content will be appended automatically</span></label>
-          <textarea id="prompt-custom-content-input" rows="14" placeholder="Build a knowledge graph from the article below.&#10;&#10;Extract all entities and relations...&#10;&#10;Return the result in this format:&#10;[RELATIONS]&#10;entity_1 -> relation -> entity_2"></textarea>
+          <label for="prompt-custom-content-input">NOTE: <span class="field-hint">Article title and text will be appended automatically at the and of the prompt</span></label>
+          <textarea id="prompt-custom-content-input" rows="14"></textarea>
         </div>
       </div>
       <div class="manual-actions">
@@ -264,6 +264,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=42"></script>
+  <script src="script.js?v=44"></script>
 </body>
 </html>
