@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from app.articles.repository.postgres_article_repository import PostgresArticleRepository
-from app.evaluation.evaluation_service import EvaluationResult, EvaluationService
+from app.evaluation.evaluation_service import EvaluationResult, EvaluationService, build_judge_prompt
 from app.evaluation.repository.evaluation_repository import EvaluationRepository
 from app.graph.repository.graph_repository import GraphRepository
 from app.kb.prompts import PROMPTS
@@ -136,6 +136,7 @@ def get_evaluation(evaluation_id: int):
         matched_count=entity.matched_count,
         reference_relation_count=entity.reference_relation_count,
         judge_prompt_version=entity.judge_prompt_version,
+        judge_prompt_text=entity.judge_prompt_text,
     )
 
 
@@ -187,3 +188,32 @@ async def evaluate(request: EvaluateRequest):
     )
     await asyncio.to_thread(_evaluation_repository.save, result, prompt_key)
     return result
+
+
+def _resolve_prompt_template_for_backfill(prompt_key: str) -> str | None:
+    parts = prompt_key.split("/", 1)
+    if len(parts) != 2:
+        return None
+    prompt_set, prompt_type = parts
+    if prompt_set in PROMPTS and prompt_type in PROMPTS[prompt_set]:
+        return PROMPTS[prompt_set][prompt_type]
+    from app.kb.prompt_config_service import prompt_config_service
+    return prompt_config_service.get_prompt_content(prompt_key)
+
+
+def backfill_judge_prompt_text() -> None:
+    for e in _evaluation_repository.get_all():
+        if e.judge_prompt_version != 2 or e.judge_prompt_text is not None:
+            continue
+        graph = _graph_repository.get_graph(e.graph_id)
+        if graph is None or graph.article_id is None:
+            continue
+        article = _article_repository.get_article(graph.article_id)
+        if article is None:
+            continue
+        prompt_template = _resolve_prompt_template_for_backfill(e.prompt_key)
+        if prompt_template is None:
+            continue
+        prompt = build_judge_prompt(graph, article.text, prompt_template)
+        _evaluation_repository.update_judge_prompt_text(e.id, prompt)
+        logger.info("Backfilled judge_prompt_text for evaluation id=%d", e.id)

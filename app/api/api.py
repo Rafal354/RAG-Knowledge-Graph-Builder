@@ -66,6 +66,7 @@ def startup_event():
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS matched_count INTEGER"))
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS reference_relation_count INTEGER"))
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS judge_prompt_version INTEGER"))
+        conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS judge_prompt_text TEXT"))
         conn.execute(text("""
             UPDATE evaluations SET judge_prompt_version = 2
             WHERE judge_prompt_version IS NULL
@@ -112,6 +113,8 @@ def startup_event():
     _seed_prompts()
     from app.kb.prompt_config_service import prompt_config_service
     prompt_config_service.seed_builtins()
+    from app.evaluation.api import backfill_judge_prompt_text
+    backfill_judge_prompt_text()
     global neo4j_service
     neo4j_service = Neo4jService(
         uri=settings.neo4j_uri,

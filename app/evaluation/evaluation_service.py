@@ -58,6 +58,7 @@ class EvaluationResult(BaseModel):
     matched_count: int | None = None
     reference_relation_count: int | None = None
     judge_prompt_version: int | None = None
+    judge_prompt_text: str | None = None
 
 
 def _compute_connectivity_score(graph) -> float:
@@ -193,32 +194,35 @@ def _compute_reference_metrics(graph, reference_graph) -> dict:
     )
 
 
+def build_judge_prompt(graph, text: str, prompt_template: str) -> str:
+    graph_text = _graph_to_text(graph)
+    return (
+        f"You are evaluating a knowledge graph extracted from a source text.\n\n"
+        f"The extraction prompt used to create this graph was:\n{prompt_template}\n\n"
+        f"Source text:\n{text}\n\n"
+        f"Knowledge graph triples ({len(graph.relations)} total):\n{graph_text}\n\n"
+        f"Your tasks:\n"
+        f"1. For each triple in the graph, decide whether it is supported by the source text "
+        f"(supported=true) or not (supported=false). A triple is supported only if ALL of the "
+        f"following hold: (a) both entities refer to things actually mentioned in the text "
+        f"(paraphrased names/wording are fine); (b) the relation type accurately reflects what "
+        f"the text states about them, not just a loosely related or overly generic relation; "
+        f"(c) the DIRECTION of the relation matches the text — the subject and object are not "
+        f"swapped. Mark supported=false for hallucinated facts, incorrect or overly generic "
+        f"relation types, and reversed-direction relations.\n"
+        f"2. List important relations present in the source text that are NOT captured by any triple in the graph.\n"
+        f"3. Write a brief analysis of the overall quality.\n\n"
+        f"Evaluate all {len(graph.relations)} triples."
+    )
+
+
 class EvaluationService:
 
     def evaluate(self, graph, text: str, prompt_template: str, model: str = "claude-sonnet-4-6",
                  reference_graph=None) -> EvaluationResult:
         from langchain.chat_models import init_chat_model
 
-        graph_text = _graph_to_text(graph)
-
-        prompt = (
-            f"You are evaluating a knowledge graph extracted from a source text.\n\n"
-            f"The extraction prompt used to create this graph was:\n{prompt_template}\n\n"
-            f"Source text:\n{text}\n\n"
-            f"Knowledge graph triples ({len(graph.relations)} total):\n{graph_text}\n\n"
-            f"Your tasks:\n"
-            f"1. For each triple in the graph, decide whether it is supported by the source text "
-            f"(supported=true) or not (supported=false). A triple is supported only if ALL of the "
-            f"following hold: (a) both entities refer to things actually mentioned in the text "
-            f"(paraphrased names/wording are fine); (b) the relation type accurately reflects what "
-            f"the text states about them, not just a loosely related or overly generic relation; "
-            f"(c) the DIRECTION of the relation matches the text — the subject and object are not "
-            f"swapped. Mark supported=false for hallucinated facts, incorrect or overly generic "
-            f"relation types, and reversed-direction relations.\n"
-            f"2. List important relations present in the source text that are NOT captured by any triple in the graph.\n"
-            f"3. Write a brief analysis of the overall quality.\n\n"
-            f"Evaluate all {len(graph.relations)} triples."
-        )
+        prompt = build_judge_prompt(graph, text, prompt_template)
 
         logger.info("Judge prompt:\n%s", prompt)
 
@@ -251,5 +255,6 @@ class EvaluationService:
             analysis=judge.analysis,
             connectivity_score=connectivity_score,
             judge_prompt_version=JUDGE_PROMPT_VERSION,
+            judge_prompt_text=prompt,
             **ref_metrics,
         )

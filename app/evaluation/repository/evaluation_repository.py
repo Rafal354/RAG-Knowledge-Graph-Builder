@@ -40,6 +40,7 @@ class EvaluationRepository:
                     matched_count=result.matched_count,
                     reference_relation_count=result.reference_relation_count,
                     judge_prompt_version=result.judge_prompt_version,
+                    judge_prompt_text=result.judge_prompt_text,
                 )
                 session.add(entity)
                 session.flush()
@@ -85,6 +86,13 @@ class EvaluationRepository:
                 .filter(EvaluationEntity.id == evaluation_id)
                 .first()
             )
+
+    def update_judge_prompt_text(self, evaluation_id: int, judge_prompt_text: str) -> None:
+        with SessionLocal() as session:
+            entity = session.query(EvaluationEntity).filter(EvaluationEntity.id == evaluation_id).first()
+            if entity is not None:
+                entity.judge_prompt_text = judge_prompt_text
+                session.commit()
 
     def delete(self, evaluation_id: int) -> bool:
         with SessionLocal() as session:
