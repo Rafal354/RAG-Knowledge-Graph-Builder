@@ -663,42 +663,49 @@ function buildEvalResultHtml(data) {
   const pct = v => (v * 100).toFixed(1) + "%";
   const metricColor = v => v >= 0.7 ? "var(--success)" : v >= 0.4 ? "var(--warning)" : "var(--error)";
   const rateColor = v => v <= 0.3 ? "var(--success)" : v <= 0.6 ? "var(--warning)" : "var(--error)";
-
-  const metricsHtml = `
-    <div style="display:flex;gap:12px;margin-bottom:16px;">
-      ${[["Precision", data.precision], ["Recall", data.recall], ["F1", data.f1]].map(([label, val]) => `
+  const countColor = (n, d) => n === 0 ? "var(--success)" : n / d <= 0.3 ? "var(--warning)" : "var(--error)";
+  const card = (label, val, color) => `
         <div style="flex:1;background:var(--bg-lighter);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;">
           <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">${label}</div>
-          <div style="font-size:22px;font-weight:700;color:${metricColor(val)};">${pct(val)}</div>
-        </div>`).join("")}
-      <div style="flex:1;background:var(--bg-lighter);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;">
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Hallucinated</div>
-        <div style="font-size:22px;font-weight:700;color:${metricColor(1 - data.unsupported_count / data.graph_relations)};">${data.unsupported_count}/${data.graph_relations}</div>
-      </div>
-      ${data.connectivity_score != null ? `
-      <div style="flex:1;background:var(--bg-lighter);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;">
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Connectivity</div>
-        <div style="font-size:22px;font-weight:700;color:${metricColor(data.connectivity_score)};">${pct(data.connectivity_score)}</div>
-      </div>` : ""}
-    </div>`;
+          <div style="font-size:22px;font-weight:700;color:${color};">${val}</div>
+        </div>`;
 
-  const refMetricsHtml = (data.t_precision != null) ? `
+  const total = data.graph_relations;
+  const totalExpected = data.supported_count + data.missing_count;
+
+  const cards = [
+    card("Prec.", pct(data.precision), metricColor(data.precision)),
+    card("Recall", pct(data.recall), metricColor(data.recall)),
+    card("Hall.", `${data.unsupported_count}/${total}`, countColor(data.unsupported_count, total)),
+    card("Miss.", `${data.missing_count}/${totalExpected}`, countColor(data.missing_count, totalExpected)),
+  ];
+  if (data.connectivity_score != null) {
+    cards.push(card("Connect.", pct(data.connectivity_score), metricColor(data.connectivity_score)));
+  }
+
+  const metricsHtml = `<div style="display:flex;gap:12px;margin-bottom:16px;">${cards.join("")}</div>`;
+
+  const refMetricsHtml = (data.t_precision != null) ? (() => {
+    const refCards = [
+      card("T-Prec.", pct(data.t_precision), metricColor(data.t_precision)),
+      card("T-Recall", pct(data.t_recall), metricColor(data.t_recall)),
+    ];
+    if (data.matched_count != null) {
+      const n = total - data.matched_count;
+      refCards.push(card("T-Hall.", `${n}/${total}`, countColor(n, total)));
+    } else if (data.hallucination_rate != null) {
+      refCards.push(card("T-Hall.", pct(data.hallucination_rate), rateColor(data.hallucination_rate)));
+    }
+    if (data.matched_count != null && data.reference_relation_count != null) {
+      const n = data.reference_relation_count - data.matched_count;
+      refCards.push(card("T-Miss.", `${n}/${data.reference_relation_count}`, countColor(n, data.reference_relation_count)));
+    } else if (data.omission_rate != null) {
+      refCards.push(card("T-Miss.", pct(data.omission_rate), rateColor(data.omission_rate)));
+    }
+    return `
     <div style="margin-bottom:6px;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Reference graph comparison (graph #${data.reference_graph_id})</div>
-    <div style="display:flex;gap:12px;margin-bottom:16px;">
-      ${[["T-Precision", data.t_precision, metricColor], ["T-Recall", data.t_recall, metricColor], ["T-F1", data.t_f1, metricColor]].map(([label, val, color]) => `
-        <div style="flex:1;background:var(--bg-lighter);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;">
-          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">${label}</div>
-          <div style="font-size:22px;font-weight:700;color:${color(val)};">${pct(val)}</div>
-        </div>`).join("")}
-      <div style="flex:1;background:var(--bg-lighter);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;">
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Unmatched</div>
-        <div style="font-size:22px;font-weight:700;color:${rateColor(data.hallucination_rate)};">${pct(data.hallucination_rate)}</div>
-      </div>
-      <div style="flex:1;background:var(--bg-lighter);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;">
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Missing</div>
-        <div style="font-size:22px;font-weight:700;color:${rateColor(data.omission_rate)};">${pct(data.omission_rate)}</div>
-      </div>
-    </div>` : "";
+    <div style="display:flex;gap:12px;margin-bottom:16px;">${refCards.join("")}</div>`;
+  })() : "";
 
   const verdictsHtml = data.triple_verdicts?.length ? `
     <div style="margin-bottom:14px;">

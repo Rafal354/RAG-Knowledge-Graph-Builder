@@ -200,17 +200,20 @@ class EvaluationService:
             f"Source text:\n{text}\n\n"
             f"Knowledge graph triples ({len(graph.relations)} total):\n{graph_text}\n\n"
             f"Your tasks:\n"
-            f"1. For each triple in the graph, decide whether it is semantically supported by the source text "
-            f"(supported=true) or not (hallucinated/incorrect, supported=false). "
-            f"Use semantic matching — paraphrases count as supported.\n"
-            f"2. List important relations present in the source text that are NOT captured by any triple "
-            f"in the graph, but that SHOULD have been extracted according to the extraction prompt above "
-            f"(i.e., relations matching the entity types, relation types and rules defined there). "
-            f"Only include genuinely important information within that scope — do not list relations that "
-            f"fall outside what the extraction prompt asks for, and do not include minor details.\n"
+            f"1. For each triple in the graph, decide whether it is supported by the source text "
+            f"(supported=true) or not (supported=false). A triple is supported only if ALL of the "
+            f"following hold: (a) both entities refer to things actually mentioned in the text "
+            f"(paraphrased names/wording are fine); (b) the relation type accurately reflects what "
+            f"the text states about them, not just a loosely related or overly generic relation; "
+            f"(c) the DIRECTION of the relation matches the text — the subject and object are not "
+            f"swapped. Mark supported=false for hallucinated facts, incorrect or overly generic "
+            f"relation types, and reversed-direction relations.\n"
+            f"2. List important relations present in the source text that are NOT captured by any triple in the graph.\n"
             f"3. Write a brief analysis of the overall quality.\n\n"
             f"Evaluate all {len(graph.relations)} triples."
         )
+
+        logger.info("Judge prompt:\n%s", prompt)
 
         llm = init_chat_model(model, timeout=120)
         judge: JudgeOutput = llm.with_structured_output(JudgeOutput).invoke(prompt)
