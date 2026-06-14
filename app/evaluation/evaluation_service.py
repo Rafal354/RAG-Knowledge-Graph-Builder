@@ -1,7 +1,9 @@
 import json
 import logging
 
+import numpy as np
 from pydantic import BaseModel, field_validator
+from scipy.optimize import linear_sum_assignment
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +75,7 @@ def _graph_to_text(graph) -> str:
 
 
 import re as _re
+
 _QUOTE_CHARS = frozenset([0x201c, 0x201d, 0x201e, 0x2018, 0x2019, 0x00ab, 0x00bb, 0x22, 0x27])
 _WS_RE = _re.compile(r"\s+")
 
@@ -107,8 +110,7 @@ def _triple_str(t: tuple) -> str:
 def _semantic_match(predicted: list, reference: list, threshold: float = 0.75):
     if not predicted or not reference:
         return 0, set(), set(range(len(reference)))
-    from scipy.optimize import linear_sum_assignment
-    import numpy as np
+
     model = _get_embed_model()
     pred_texts = [_triple_str(t) for t in predicted]
     ref_texts = [_triple_str(t) for t in reference]
@@ -186,7 +188,8 @@ def _compute_reference_metrics(graph, reference_graph) -> dict:
 
 class EvaluationService:
 
-    def evaluate(self, graph, text: str, prompt_template: str, model: str = "claude-sonnet-4-6", reference_graph=None) -> EvaluationResult:
+    def evaluate(self, graph, text: str, prompt_template: str, model: str = "claude-sonnet-4-6",
+                 reference_graph=None) -> EvaluationResult:
         from langchain.chat_models import init_chat_model
 
         graph_text = _graph_to_text(graph)
@@ -200,8 +203,11 @@ class EvaluationService:
             f"1. For each triple in the graph, decide whether it is semantically supported by the source text "
             f"(supported=true) or not (hallucinated/incorrect, supported=false). "
             f"Use semantic matching — paraphrases count as supported.\n"
-            f"2. List important relations present in the source text that are NOT captured by any triple in the graph. "
-            f"Only include genuinely important information, not minor details.\n"
+            f"2. List important relations present in the source text that are NOT captured by any triple "
+            f"in the graph, but that SHOULD have been extracted according to the extraction prompt above "
+            f"(i.e., relations matching the entity types, relation types and rules defined there). "
+            f"Only include genuinely important information within that scope — do not list relations that "
+            f"fall outside what the extraction prompt asks for, and do not include minor details.\n"
             f"3. Write a brief analysis of the overall quality.\n\n"
             f"Evaluate all {len(graph.relations)} triples."
         )
