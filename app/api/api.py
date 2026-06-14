@@ -5,10 +5,10 @@ import webbrowser
 
 from fastapi import APIRouter
 
-from app.articles.model.article_entity import Base
 import app.evaluation.model.evaluation_entity  # noqa: F401
-import app.kb.model.prompt_entity  # noqa: F401
 import app.kb.model.prompt_config_entity  # noqa: F401
+import app.kb.model.prompt_entity  # noqa: F401
+from app.articles.model.article_entity import Base
 from app.config.database import engine
 from app.config.settings import settings
 from app.kb.knowledge_base_service import knowledge_base_service
@@ -45,8 +45,10 @@ def startup_event():
         from sqlalchemy import text
         conn.execute(text("ALTER TABLE graphs ADD COLUMN IF NOT EXISTS title TEXT"))
         conn.execute(text("ALTER TABLE graphs ADD COLUMN IF NOT EXISTS model TEXT"))
-        conn.execute(text("ALTER TABLE graphs ADD COLUMN IF NOT EXISTS article_id INTEGER REFERENCES articles(id) ON DELETE SET NULL"))
-        conn.execute(text("ALTER TABLE graphs ADD COLUMN IF NOT EXISTS prompt_key TEXT REFERENCES prompts(key) ON DELETE SET NULL"))
+        conn.execute(text(
+            "ALTER TABLE graphs ADD COLUMN IF NOT EXISTS article_id INTEGER REFERENCES articles(id) ON DELETE SET NULL"))
+        conn.execute(text(
+            "ALTER TABLE graphs ADD COLUMN IF NOT EXISTS prompt_key TEXT REFERENCES prompts(key) ON DELETE SET NULL"))
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS eval_model TEXT DEFAULT ''"))
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS connectivity_score FLOAT"))
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS reference_graph_id INTEGER"))
@@ -54,7 +56,8 @@ def startup_event():
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS omission_rate FLOAT"))
         conn.execute(text("ALTER TABLE prompt_configs ADD COLUMN IF NOT EXISTS examples_positive TEXT"))
         conn.execute(text("ALTER TABLE prompt_configs ADD COLUMN IF NOT EXISTS examples_negative TEXT"))
-        conn.execute(text("ALTER TABLE prompt_configs ADD COLUMN IF NOT EXISTS mode TEXT NOT NULL DEFAULT 'structured'"))
+        conn.execute(
+            text("ALTER TABLE prompt_configs ADD COLUMN IF NOT EXISTS mode TEXT NOT NULL DEFAULT 'structured'"))
         conn.execute(text("ALTER TABLE prompt_configs ADD COLUMN IF NOT EXISTS custom_content TEXT"))
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS t_precision FLOAT"))
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS t_recall FLOAT"))

@@ -3,12 +3,12 @@ import logging
 from sqlalchemy.orm import selectinload
 
 from app.config.database import SessionLocal
+from app.evaluation.evaluation_service import EvaluationResult
 from app.evaluation.model.evaluation_entity import (
     EvaluationEntity,
     EvaluationMissingRelationEntity,
     EvaluationTripleVerdictEntity,
 )
-from app.evaluation.evaluation_service import EvaluationResult
 
 logger = logging.getLogger(__name__)
 
