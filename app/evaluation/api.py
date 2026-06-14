@@ -50,6 +50,7 @@ class EvaluationSummary(BaseModel):
     ged: int | None = None
     matched_count: int | None = None
     reference_relation_count: int | None = None
+    judge_prompt_version: int | None = None
 
 
 @router.get("/prompts")
@@ -97,6 +98,7 @@ def list_evaluations():
             ged=e.ged,
             matched_count=e.matched_count,
             reference_relation_count=e.reference_relation_count,
+            judge_prompt_version=e.judge_prompt_version,
         )
         for e in entities
     ]
@@ -133,6 +135,7 @@ def get_evaluation(evaluation_id: int):
         ged=entity.ged,
         matched_count=entity.matched_count,
         reference_relation_count=entity.reference_relation_count,
+        judge_prompt_version=entity.judge_prompt_version,
     )
 
 

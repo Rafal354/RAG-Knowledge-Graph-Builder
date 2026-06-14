@@ -7,6 +7,12 @@ from scipy.optimize import linear_sum_assignment
 
 logger = logging.getLogger(__name__)
 
+# Bumped whenever the judge prompt's evaluation criteria (point 1, "supported" rubric) change,
+# so saved evaluations can be traced back to the rubric version that produced them.
+# v1: "semantically supported, paraphrases count as supported"
+# v2: added entity/relation-type/direction fidelity checks
+JUDGE_PROMPT_VERSION = 2
+
 
 class TripleVerdict(BaseModel):
     triple: str
@@ -51,6 +57,7 @@ class EvaluationResult(BaseModel):
     ged: int | None = None
     matched_count: int | None = None
     reference_relation_count: int | None = None
+    judge_prompt_version: int | None = None
 
 
 def _compute_connectivity_score(graph) -> float:
@@ -243,5 +250,6 @@ class EvaluationService:
             missing_relations=judge.missing_important_relations,
             analysis=judge.analysis,
             connectivity_score=connectivity_score,
+            judge_prompt_version=JUDGE_PROMPT_VERSION,
             **ref_metrics,
         )

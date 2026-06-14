@@ -39,6 +39,7 @@ class EvaluationRepository:
                     ged=result.ged,
                     matched_count=result.matched_count,
                     reference_relation_count=result.reference_relation_count,
+                    judge_prompt_version=result.judge_prompt_version,
                 )
                 session.add(entity)
                 session.flush()

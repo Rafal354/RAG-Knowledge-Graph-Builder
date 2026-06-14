@@ -65,6 +65,12 @@ def startup_event():
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS ged INTEGER"))
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS matched_count INTEGER"))
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS reference_relation_count INTEGER"))
+        conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS judge_prompt_version INTEGER"))
+        conn.execute(text("""
+            UPDATE evaluations SET judge_prompt_version = 2
+            WHERE judge_prompt_version IS NULL
+              AND id IN (SELECT id FROM evaluations ORDER BY created_at DESC LIMIT 30)
+        """))
         conn.execute(text("""
             DO $$
             BEGIN
