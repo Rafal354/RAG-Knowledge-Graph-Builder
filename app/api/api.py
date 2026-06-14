@@ -60,6 +60,8 @@ def startup_event():
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS t_recall FLOAT"))
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS t_f1 FLOAT"))
         conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS ged INTEGER"))
+        conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS matched_count INTEGER"))
+        conn.execute(text("ALTER TABLE evaluations ADD COLUMN IF NOT EXISTS reference_relation_count INTEGER"))
         conn.execute(text("""
             DO $$
             BEGIN

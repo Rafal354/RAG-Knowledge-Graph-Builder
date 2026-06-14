@@ -48,6 +48,8 @@ class EvaluationSummary(BaseModel):
     hallucination_rate: float | None = None
     omission_rate: float | None = None
     ged: int | None = None
+    matched_count: int | None = None
+    reference_relation_count: int | None = None
 
 
 @router.get("/prompts")
@@ -93,6 +95,8 @@ def list_evaluations():
             hallucination_rate=e.hallucination_rate,
             omission_rate=e.omission_rate,
             ged=e.ged,
+            matched_count=e.matched_count,
+            reference_relation_count=e.reference_relation_count,
         )
         for e in entities
     ]
@@ -127,6 +131,8 @@ def get_evaluation(evaluation_id: int):
         hallucination_rate=entity.hallucination_rate,
         omission_rate=entity.omission_rate,
         ged=entity.ged,
+        matched_count=entity.matched_count,
+        reference_relation_count=entity.reference_relation_count,
     )
 
 

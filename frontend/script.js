@@ -745,8 +745,8 @@ async function loadEvalHistory() {
 
   evalHistoryList.innerHTML = `
     <div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 60px 60px 60px 52px 60px 60px 60px 60px 60px 48px 24px;gap:8px;padding:5px 10px;background:var(--bg-lighter);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">
-        <span>Graf</span><span>Prompt</span><span>Model</span><span>Sędzia</span><span>Prec.</span><span>Recall</span><span>F1</span><span>Hall.</span><span>Connect.</span><span>T-Prec.</span><span>T-Recall</span><span>T-F1</span><span>Unmatch.</span><span>Missing</span><span></span>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 60px 60px 52px 52px 60px 60px 60px 48px 60px 24px;gap:8px;padding:5px 10px;background:var(--bg-lighter);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">
+        <span>Graf</span><span>Prompt</span><span>Model</span><span>Sędzia</span><span>Prec.</span><span>Recall</span><span>Hall.</span><span>Miss.</span><span>T-Prec.</span><span>T-Recall</span><span>T-Hall.</span><span>T-Miss.</span><span>Connect.</span><span></span>
       </div>
       ${items.map(e => {
         const g = graphMap[e.graph_id];
@@ -754,41 +754,50 @@ async function loadEvalHistory() {
         const extractModel = g?.model ? g.model.replace(/^local:/, "").split("/").pop() : "—";
         const judgeModel = e.eval_model ? e.eval_model.replace(/^local:/, "").split("/").pop() : "—";
         const rateColor = v => v <= 0.3 ? "var(--success)" : v <= 0.6 ? "var(--warning)" : "var(--error)";
-        const tF1Cell = e.t_f1 != null
-          ? `<span style="font-weight:600;color:${metricColor(e.t_f1)};">${pct(e.t_f1)}</span>`
-          : `<span style="color:var(--text-muted);">—</span>`;
+        const total = e.supported_count + e.unsupported_count;
+        const totalExpected = e.supported_count + e.missing_count;
         const tPrecCell = e.t_precision != null
           ? `<span style="font-weight:600;color:${metricColor(e.t_precision)};">${pct(e.t_precision)}</span>`
           : `<span style="color:var(--text-muted);">—</span>`;
         const tRecallCell = e.t_recall != null
           ? `<span style="font-weight:600;color:${metricColor(e.t_recall)};">${pct(e.t_recall)}</span>`
           : `<span style="color:var(--text-muted);">—</span>`;
-        const hallCell = e.hallucination_rate != null
-          ? `<span style="font-weight:600;color:${rateColor(e.hallucination_rate)};">${pct(e.hallucination_rate)}</span>`
-          : `<span style="color:var(--text-muted);">—</span>`;
-        const missingCell = e.omission_rate != null
-          ? `<span style="font-weight:600;color:${rateColor(e.omission_rate)};">${pct(e.omission_rate)}</span>`
-          : `<span style="color:var(--text-muted);">—</span>`;
-        const total = e.supported_count + e.unsupported_count;
+        const tHallCell = e.matched_count != null
+          ? (() => {
+              const n = total - e.matched_count;
+              return `<span style="font-weight:600;color:${n === 0 ? "var(--success)" : n / total <= 0.3 ? "var(--warning)" : "var(--error)"};">${n}/${total}</span>`;
+            })()
+          : (e.hallucination_rate != null
+              ? `<span style="font-weight:600;color:${rateColor(e.hallucination_rate)};">${pct(e.hallucination_rate)}</span>`
+              : `<span style="color:var(--text-muted);">—</span>`);
+        const tMissCell = (e.matched_count != null && e.reference_relation_count != null)
+          ? (() => {
+              const n = e.reference_relation_count - e.matched_count;
+              const d = e.reference_relation_count;
+              return `<span style="font-weight:600;color:${n === 0 ? "var(--success)" : n / d <= 0.3 ? "var(--warning)" : "var(--error)"};">${n}/${d}</span>`;
+            })()
+          : (e.omission_rate != null
+              ? `<span style="font-weight:600;color:${rateColor(e.omission_rate)};">${pct(e.omission_rate)}</span>`
+              : `<span style="color:var(--text-muted);">—</span>`);
         const hallucCell = `<span style="font-weight:600;color:${e.unsupported_count === 0 ? "var(--success)" : e.unsupported_count / total <= 0.3 ? "var(--warning)" : "var(--error)"};">${e.unsupported_count}/${total}</span>`;
+        const missCountCell = `<span style="font-weight:600;color:${e.missing_count === 0 ? "var(--success)" : e.missing_count / totalExpected <= 0.3 ? "var(--warning)" : "var(--error)"};">${e.missing_count}/${totalExpected}</span>`;
         const connCell = e.connectivity_score != null
           ? `<span style="font-weight:600;color:${metricColor(e.connectivity_score)};">${pct(e.connectivity_score)}</span>`
           : `<span style="color:var(--text-muted);">—</span>`;
-        return `<div class="eval-history-row" data-id="${e.id}" data-graph="${graphLabel}" data-prompt="${e.prompt_key}" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 60px 60px 60px 52px 60px 60px 60px 60px 60px 48px 24px;gap:8px;align-items:center;padding:6px 10px;border-top:1px solid var(--border);cursor:pointer;font-size:12px;transition:background 0.1s;">
+        return `<div class="eval-history-row" data-id="${e.id}" data-graph="${graphLabel}" data-prompt="${e.prompt_key}" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 60px 60px 52px 52px 60px 60px 60px 48px 60px 24px;gap:8px;align-items:center;padding:6px 10px;border-top:1px solid var(--border);cursor:pointer;font-size:12px;transition:background 0.1s;">
           <span style="color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${graphLabel}</span>
           <span style="color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.prompt_key}</span>
           <span style="color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${extractModel}</span>
           <span style="color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${judgeModel}</span>
           <span style="font-weight:600;color:${metricColor(e.precision)};">${pct(e.precision)}</span>
           <span style="font-weight:600;color:${metricColor(e.recall)};">${pct(e.recall)}</span>
-          <span style="font-weight:600;color:${metricColor(e.f1)};">${pct(e.f1)}</span>
           ${hallucCell}
-          ${connCell}
+          ${missCountCell}
           ${tPrecCell}
           ${tRecallCell}
-          ${tF1Cell}
-          ${hallCell}
-          ${missingCell}
+          ${tHallCell}
+          ${tMissCell}
+          ${connCell}
           <span class="eval-history-delete" data-id="${e.id}" style="color:var(--text-muted);cursor:pointer;text-align:center;border-radius:3px;padding:1px 3px;font-size:12px;">✕</span>
         </div>`;
       }).join("")}

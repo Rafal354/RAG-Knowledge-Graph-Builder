@@ -47,6 +47,8 @@ class EvaluationResult(BaseModel):
     hallucination_rate: float | None = None
     omission_rate: float | None = None
     ged: int | None = None
+    matched_count: int | None = None
+    reference_relation_count: int | None = None
 
 
 def _compute_connectivity_score(graph) -> float:
@@ -177,6 +179,8 @@ def _compute_reference_metrics(graph, reference_graph) -> dict:
         hallucination_rate=round(hallucination_rate, 3),
         omission_rate=round(omission_rate, 3),
         ged=ged,
+        matched_count=matched,
+        reference_relation_count=len(reference),
     )
 
 

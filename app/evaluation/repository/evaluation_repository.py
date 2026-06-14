@@ -37,6 +37,8 @@ class EvaluationRepository:
                     t_recall=result.t_recall,
                     t_f1=result.t_f1,
                     ged=result.ged,
+                    matched_count=result.matched_count,
+                    reference_relation_count=result.reference_relation_count,
                 )
                 session.add(entity)
                 session.flush()

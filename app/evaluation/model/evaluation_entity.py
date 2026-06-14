@@ -28,6 +28,8 @@ class EvaluationEntity(Base):
     t_recall: Mapped[float | None] = mapped_column(Float, nullable=True)
     t_f1: Mapped[float | None] = mapped_column(Float, nullable=True)
     ged: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    matched_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    reference_relation_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
