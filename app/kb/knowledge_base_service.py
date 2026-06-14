@@ -1,6 +1,7 @@
 import logging
 import os
 from concurrent.futures import ThreadPoolExecutor
+from openai import OpenAI
 
 from langchain.chat_models import init_chat_model
 
@@ -65,7 +66,6 @@ class KnowledgeBaseService:
 
             if settings.openai_request:
                 if model.startswith("local:"):
-                    from openai import OpenAI
                     client = OpenAI(base_url="http://localhost:1234/v1", api_key="lm-studio", timeout=600.0)
                     completion = client.chat.completions.create(
                         model=model[len("local:"):],
@@ -73,8 +73,7 @@ class KnowledgeBaseService:
                     )
                     logger.info("Response (LM Studio): %s", completion)
                     response_to_return = completion.choices[0].message.content.strip()
-                elif model.startswith("qwen"):
-                    from openai import OpenAI
+                elif model.startswith("qwen") and "/" not in model:
                     client = OpenAI(
                         base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
                         api_key=settings.alibaba_api_key,
@@ -88,7 +87,6 @@ class KnowledgeBaseService:
                     logger.info("Response (Alibaba): %s", completion)
                     response_to_return = completion.choices[0].message.content.strip()
                 elif "/" in model:
-                    from openai import OpenAI
                     client = OpenAI(
                         base_url="https://openrouter.ai/api/v1",
                         api_key=settings.openrouter_api_key,
@@ -121,7 +119,8 @@ class KnowledgeBaseService:
 
             logger.info("Response: %s", response_to_return)
 
-            self.graph_service.save_graph(response_to_return, title=title, model=model, article_id=article_id, prompt_key=prompt_key)
+            self.graph_service.save_graph(response_to_return, title=title, model=model, article_id=article_id,
+                                          prompt_key=prompt_key)
             try:
                 self.neo4j_service.push_graph(self.graph_service.get_latest_graph())
             except Exception:
