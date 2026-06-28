@@ -74,3 +74,8 @@ internal/notes.txt
 # -------------------------
 database/*
 /internal/
+
+# -------------------------
+# Generated data exports
+# -------------------------
+/exports/

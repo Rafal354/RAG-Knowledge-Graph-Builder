@@ -17,3 +17,5 @@ networkx
 sentence-transformers
 scipy
 json-repair
+pandas
+matplotlib
