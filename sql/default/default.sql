@@ -34,4 +34,4 @@ AND e.id != 99 -- powtórka
 AND e.id != 100 -- powtórka
 AND g.model != 'openai/gpt-oss-20b' -- nieobsługiwany model
 
-ORDER BY g.model
+ORDER BY g.model, a.title
