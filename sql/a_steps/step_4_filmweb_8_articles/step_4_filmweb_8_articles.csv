@@ -1,0 +1,33 @@
+position,id,title,model,prompt,precision,recall,hall,miss,t-precision,t-recall,t-hall,t-miss,connectivity
+453,60,Langer_serial_SkyShowtime,google/gemma-4-26b-a4b-it,filmweb_pl/new_graph,1,0.784,0 | 29,8 | 37,1,0.829,,,0.647
+466,63,Maj w Prime Video. Jakie nowości zobaczymy w serwisie,google/gemma-4-26b-a4b-it,filmweb_pl/new_graph,1,0.683,0 | 28,13 | 41,0.821,0.657,,,0.184
+482,67,Największe kino plenerowe w Polsce powraca!,google/gemma-4-26b-a4b-it,filmweb_pl/new_graph,1,0.667,0 | 14,7 | 21,0.714,0.769,,,0.421
+478,66,Porzadny czlowiek - recenzujemy produkcje platformy Max,google/gemma-4-26b-a4b-it,filmweb_pl/new_graph,1,0.5,0 | 2,2 | 4,1,0.667,,,1
+474,65,Siedem nowych filmów w programie 22. MDAG online!,google/gemma-4-26b-a4b-it,filmweb_pl/new_graph,1,0.647,0 | 11,6 | 17,1,0.55,,,0.615
+470,64,The Pitt - Nowy klasyk serialu medycznego. Recenzja,google/gemma-4-26b-a4b-it,filmweb_pl/new_graph,1,0.667,0 | 6,3 | 9,1,1,,,1
+457,62,The_Last_of_Us_odcinek_5_tworcy_o_szokujacych_scenach,google/gemma-4-26b-a4b-it,filmweb_pl/new_graph,0.8,0.615,2 | 10,5 | 13,0.9,0.75,,,0.692
+461,61,Wladcy_Pierscieni_Pierscienie_Wladzy_nowi_aktorzy,google/gemma-4-26b-a4b-it,filmweb_pl/new_graph,1,0.82,0 | 41,9 | 50,0.951,0.886,,,0.953
+453,84,Langer_serial_SkyShowtime,google/gemma-4-31b-it,filmweb_pl/new_graph,1,0.895,0 | 17,2 | 19,1,0.486,,,0.895
+466,87,Maj w Prime Video. Jakie nowości zobaczymy w serwisie,google/gemma-4-31b-it,filmweb_pl/new_graph,0.951,0.886,2 | 41,5 | 44,0.854,1,,,1
+482,93,Największe kino plenerowe w Polsce powraca!,google/gemma-4-31b-it,filmweb_pl/new_graph,1,0.733,0 | 11,4 | 15,1,0.846,0 | 11,2 | 13,0.5
+478,90,Porzadny czlowiek - recenzujemy produkcje platformy Max,google/gemma-4-31b-it,filmweb_pl/new_graph,1,0.4,0 | 2,3 | 5,1,0.667,,,1
+474,89,Siedem nowych filmów w programie 22. MDAG online!,google/gemma-4-31b-it,filmweb_pl/new_graph,1,0.684,0 | 13,6 | 19,1,0.65,,,1
+470,88,The Pitt - Nowy klasyk serialu medycznego. Recenzja,google/gemma-4-31b-it,filmweb_pl/new_graph,1,0.667,0 | 6,3 | 9,1,1,,,0.714
+457,86,The_Last_of_Us_odcinek_5_tworcy_o_szokujacych_scenach,google/gemma-4-31b-it,filmweb_pl/new_graph,0.778,0.583,2 | 9,5 | 12,0.889,0.667,,,0.667
+461,85,Wladcy_Pierscieni_Pierscienie_Wladzy_nowi_aktorzy,google/gemma-4-31b-it,filmweb_pl/new_graph,1,0.744,0 | 29,10 | 39,1,0.659,,,1
+453,76,Langer_serial_SkyShowtime,mistralai/mistral-small-3.2-24b-instruct,filmweb_pl/new_graph,1,0.852,0 | 23,4 | 27,0.783,0.514,,,1
+466,79,Maj w Prime Video. Jakie nowości zobaczymy w serwisie,mistralai/mistral-small-3.2-24b-instruct,filmweb_pl/new_graph,1,0.683,0 | 28,13 | 41,0.857,0.686,,,0.184
+482,83,Największe kino plenerowe w Polsce powraca!,mistralai/mistral-small-3.2-24b-instruct,filmweb_pl/new_graph,0.647,0.846,18 | 51,6 | 39,0.235,0.923,,,1
+478,82,Porzadny czlowiek - recenzujemy produkcje platformy Max,mistralai/mistral-small-3.2-24b-instruct,filmweb_pl/new_graph,0.8,0.571,1 | 5,3 | 7,0.6,1,,,1
+474,81,Siedem nowych filmów w programie 22. MDAG online!,mistralai/mistral-small-3.2-24b-instruct,filmweb_pl/new_graph,0.938,0.882,2 | 32,4 | 34,0.531,0.85,,,1
+470,80,The Pitt - Nowy klasyk serialu medycznego. Recenzja,mistralai/mistral-small-3.2-24b-instruct,filmweb_pl/new_graph,0.889,0.727,1 | 9,3 | 11,0.667,1,,,1
+457,78,The_Last_of_Us_odcinek_5_tworcy_o_szokujacych_scenach,mistralai/mistral-small-3.2-24b-instruct,filmweb_pl/new_graph,0.846,0.733,2 | 13,4 | 15,0.923,1,,,0.643
+461,77,Wladcy_Pierscieni_Pierscienie_Wladzy_nowi_aktorzy,mistralai/mistral-small-3.2-24b-instruct,filmweb_pl/new_graph,0.951,0.83,2 | 41,8 | 47,0.829,0.773,,,0.952
+453,68,Langer_serial_SkyShowtime,qwen3-32b,filmweb_pl/new_graph,1,0.9,0 | 18,2 | 20,0.944,0.486,,,1
+466,71,Maj w Prime Video. Jakie nowości zobaczymy w serwisie,qwen3-32b,filmweb_pl/new_graph,0.97,0.821,1 | 33,7 | 39,0.97,0.914,,,0.595
+482,75,Największe kino plenerowe w Polsce powraca!,qwen3-32b,filmweb_pl/new_graph,1,0.794,0 | 27,7 | 34,0.296,0.615,,,1
+478,74,Porzadny czlowiek - recenzujemy produkcje platformy Max,qwen3-32b,filmweb_pl/new_graph,1,0.6,0 | 3,2 | 5,1,1,,,1
+474,73,Siedem nowych filmów w programie 22. MDAG online!,qwen3-32b,filmweb_pl/new_graph,0.636,0.667,8 | 22,7 | 21,0.364,0.4,,,1
+470,72,The Pitt - Nowy klasyk serialu medycznego. Recenzja,qwen3-32b,filmweb_pl/new_graph,1,0.571,0 | 4,3 | 7,1,0.667,,,1
+457,70,The_Last_of_Us_odcinek_5_tworcy_o_szokujacych_scenach,qwen3-32b,filmweb_pl/new_graph,0.909,0.714,1 | 11,4 | 14,0.818,0.75,,,0.692
+461,69,Wladcy_Pierscieni_Pierscienie_Wladzy_nowi_aktorzy,qwen3-32b,filmweb_pl/new_graph,0.9,0.574,3 | 30,20 | 47,0.767,0.523,,,0.889
