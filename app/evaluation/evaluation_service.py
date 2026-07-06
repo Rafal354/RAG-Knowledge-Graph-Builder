@@ -22,15 +22,41 @@ class TripleVerdict(BaseModel):
 
 class JudgeOutput(BaseModel):
     triple_verdicts: list[TripleVerdict]
-    missing_important_relations: list[str]
-    analysis: str
+    missing_important_relations: list[str] = []
+    analysis: str = ""
 
-    @field_validator("triple_verdicts", "missing_important_relations", mode="before")
+    @field_validator("triple_verdicts", mode="before")
     @classmethod
-    def _parse_if_string(cls, v):
+    def _parse_triple_verdicts(cls, v):
         if isinstance(v, str):
             from json_repair import repair_json
-            return json.loads(repair_json(v))
+            v = json.loads(repair_json(v))
+        if isinstance(v, list):
+            flat = []
+            for item in v:
+                if isinstance(item, list):
+                    flat.extend(item)
+                elif isinstance(item, str):
+                    pass  # misplaced missing-relation string — discard
+                else:
+                    flat.append(item)
+            return flat
+        return v
+
+    @field_validator("missing_important_relations", mode="before")
+    @classmethod
+    def _parse_missing_relations(cls, v):
+        if isinstance(v, str):
+            from json_repair import repair_json
+            v = json.loads(repair_json(v))
+        if isinstance(v, list):
+            flat = []
+            for item in v:
+                if isinstance(item, list):
+                    flat.extend(item)
+                else:
+                    flat.append(item)
+            return flat
         return v
 
 
