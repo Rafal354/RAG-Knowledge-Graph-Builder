@@ -19,7 +19,8 @@ INNER JOIN graphs rg on e.reference_graph_id = rg.id
 INNER JOIN articles a on a.id = g.article_id
 WHERE (
     e.prompt_key = 'filmweb_pl/new_graph' OR
-    e.prompt_key = 'sport_pl/new_graph'
+    e.prompt_key = 'sport_pl/new_graph' OR
+    e.prompt_key = 'technology/new_graph'
     )
 
 AND (
@@ -27,6 +28,7 @@ AND (
     g.model = 'google/gemma-4-26b-a4b-it' OR
     g.model = 'google/gemma-4-31b-it' OR
     g.model = 'mistralai/mistral-small-3.2-24b-instruct'
+--     g.model = 'google/gemma-4-26b-a4b-it'
     )
 
 AND e.id != 59 -- powtórka
