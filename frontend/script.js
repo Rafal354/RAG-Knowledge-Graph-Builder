@@ -1004,6 +1004,7 @@ promptCustomLanguageInput.addEventListener("change", applyCustomPromptLanguageDe
 const promptMenuBtn = document.getElementById("prompt-menu-btn");
 const promptMenu = document.getElementById("prompt-menu");
 const promptMenuPreview = document.getElementById("prompt-menu-preview");
+const promptMenuEdit = document.getElementById("prompt-menu-edit");
 const promptMenuAddStructured = document.getElementById("prompt-menu-add-structured");
 const promptMenuAddCustom = document.getElementById("prompt-menu-add-custom");
 const promptMenuDelete = document.getElementById("prompt-menu-delete");
@@ -1018,6 +1019,7 @@ document.getElementById("prompt-preview-close-btn").addEventListener("click", ()
 promptPreviewModal.addEventListener("click", (e) => { if (e.target === promptPreviewModal) promptPreviewModal.classList.add("hidden"); });
 
 let promptConfigsCache = [];
+let editingPromptKey = null;
 
 function closePromptMenu() { promptMenu.classList.add("hidden"); }
 
@@ -1026,6 +1028,7 @@ promptMenuBtn.addEventListener("click", (e) => {
   promptMenu.classList.toggle("hidden");
   const config = promptConfigsCache.find(c => c.key === promptSelect.value);
   promptMenuDelete.classList.toggle("prompt-menu-item--disabled", !config || config.is_builtin);
+  promptMenuEdit.classList.toggle("prompt-menu-item--disabled", !config);
 });
 
 document.addEventListener("click", (e) => {
@@ -1081,6 +1084,30 @@ promptMenuPreview.addEventListener("click", () => {
     });
 });
 
+promptMenuEdit.addEventListener("click", () => {
+  closePromptMenu();
+  const key = promptSelect.value;
+  const config = promptConfigsCache.find(c => c.key === key);
+  if (!config) return;
+  editingPromptKey = key;
+  if (config.mode === "custom") {
+    promptCustomNameInput.value = config.name;
+    promptCustomLanguageInput.value = config.language;
+    promptCustomContentInput.value = config.custom_content || "";
+    document.querySelector("#prompt-custom-modal h2").textContent = "Edit Prompt";
+    promptCustomModal.classList.remove("hidden");
+  } else {
+    promptNameInput.value = config.name;
+    promptLanguageInput.value = config.language;
+    promptEntityTypesInput.value = config.entity_types || "";
+    promptRulesInput.value = config.rules || "";
+    promptExamplesPositiveInput.value = config.examples_positive || "";
+    promptExamplesNegativeInput.value = config.examples_negative || "";
+    document.querySelector("#prompt-structured-modal h2").textContent = "Edit Prompt";
+    promptStructuredModal.classList.remove("hidden");
+  }
+});
+
 promptMenuAddStructured.addEventListener("click", () => {
   closePromptMenu();
   promptStructuredModal.classList.remove("hidden");
@@ -1117,6 +1144,8 @@ function closeStructuredModal() {
   promptRulesInput.value = "";
   promptExamplesPositiveInput.value = "";
   promptExamplesNegativeInput.value = "";
+  editingPromptKey = null;
+  document.querySelector("#prompt-structured-modal h2").textContent = "Add Structured Prompt";
 }
 
 function closeCustomModal() {
@@ -1124,6 +1153,8 @@ function closeCustomModal() {
   promptCustomNameInput.value = "";
   promptCustomLanguageInput.value = "pl";
   promptCustomContentInput.value = "";
+  editingPromptKey = null;
+  document.querySelector("#prompt-custom-modal h2").textContent = "Add Custom Prompt";
 }
 
 document.getElementById("prompt-structured-cancel-btn").addEventListener("click", closeStructuredModal);
@@ -1137,9 +1168,14 @@ promptCustomModal.addEventListener("click", (e) => { if (e.target === promptCust
 async function savePromptConfig(payload, saveBtn, closeFn) {
   saveBtn.disabled = true;
   saveBtn.textContent = "Saving...";
+  const isEditing = !!editingPromptKey;
+  const editKey = editingPromptKey;
   try {
-    const res = await fetch(`${API_BASE_URL}/prompt-configs`, {
-      method: "POST",
+    const url = isEditing
+      ? `${API_BASE_URL}/prompt-configs/${editKey}`
+      : `${API_BASE_URL}/prompt-configs`;
+    const res = await fetch(url, {
+      method: isEditing ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
@@ -1147,15 +1183,15 @@ async function savePromptConfig(payload, saveBtn, closeFn) {
       const data = await res.json().catch(() => ({}));
       throw new Error(data.detail || "HTTP " + res.status);
     }
-    const created = await res.json();
+    const result = await res.json();
     closeFn();
-    setStatus(`Prompt '${created.name}' created`, "ok");
+    setStatus(`Prompt '${result.name}' ${isEditing ? "updated" : "created"}`, "ok");
     await fetchPromptConfigs();
-    promptSelect.value = created.key;
+    promptSelect.value = result.key;
     promptSelectCustom.syncDisplay();
-    await applyPromptSet(created.key);
+    await applyPromptSet(result.key);
   } catch (err) {
-    setStatus("Error creating prompt: " + err.message, "error");
+    setStatus(`Error ${isEditing ? "updating" : "creating"} prompt: ` + err.message, "error");
   } finally {
     saveBtn.disabled = false;
     saveBtn.textContent = "Save prompt";

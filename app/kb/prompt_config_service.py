@@ -392,6 +392,57 @@ class PromptConfigService:
                 "custom_content": custom_content or None,
             }
 
+    def update_config(
+        self,
+        key: str,
+        name: str,
+        entity_types: str,
+        rules: str,
+        language: str,
+        examples_positive: str | None = None,
+        examples_negative: str | None = None,
+        mode: str = "structured",
+        custom_content: str | None = None,
+    ) -> dict | None:
+        with SessionLocal() as session:
+            config = session.get(PromptConfigEntity, key)
+            if config is None:
+                return None
+            config.name = name
+            config.entity_types = entity_types
+            config.rules = rules
+            config.language = language
+            config.examples_positive = examples_positive or None
+            config.examples_negative = examples_negative or None
+            config.mode = mode
+            config.custom_content = custom_content or None
+
+            for prompt_type in ("new_graph", "existing_graph"):
+                full_key = f"{key}/{prompt_type}"
+                content = build_prompt_content(
+                    entity_types, rules, language, prompt_type,
+                    examples_positive=examples_positive or None,
+                    examples_negative=examples_negative or None,
+                    mode=mode,
+                    custom_content=custom_content or None,
+                )
+                existing_prompt = session.get(PromptEntity, full_key)
+                if existing_prompt is None:
+                    session.add(PromptEntity(key=full_key, content=content))
+                else:
+                    existing_prompt.content = content
+
+            session.commit()
+            logger.info("Updated prompt config: %s", key)
+            return {
+                "key": key, "name": name, "entity_types": entity_types, "rules": rules,
+                "language": language, "is_builtin": config.is_builtin,
+                "examples_positive": examples_positive or None,
+                "examples_negative": examples_negative or None,
+                "mode": mode,
+                "custom_content": custom_content or None,
+            }
+
     def delete_config(self, key: str) -> bool:
         with SessionLocal() as session:
             config = session.get(PromptConfigEntity, key)

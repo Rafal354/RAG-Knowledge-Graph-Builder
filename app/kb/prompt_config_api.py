@@ -21,6 +21,17 @@ class CreatePromptConfigRequest(BaseModel):
     custom_content: str | None = None
 
 
+class UpdatePromptConfigRequest(BaseModel):
+    name: str
+    entity_types: str = ""
+    rules: str = ""
+    language: str = "pl"
+    examples_positive: str | None = None
+    examples_negative: str | None = None
+    mode: str = "structured"
+    custom_content: str | None = None
+
+
 class PromptSetRequest(BaseModel):
     key: str
 
@@ -55,6 +66,40 @@ def create_prompt_config(request: CreatePromptConfigRequest):
         mode=request.mode,
         custom_content=request.custom_content.strip() if request.custom_content else None,
     )
+
+
+@router.put("/prompt-configs/{key}")
+def update_prompt_config(key: str, request: UpdatePromptConfigRequest):
+    config = prompt_config_service.get_config(key)
+    if config is None:
+        raise HTTPException(status_code=404, detail=f"Prompt config '{key}' not found")
+    if not request.name.strip():
+        raise HTTPException(status_code=400, detail="Name is required")
+    if request.language not in ("pl", "en"):
+        raise HTTPException(status_code=400, detail="Language must be 'pl' or 'en'")
+    if request.mode not in ("structured", "custom"):
+        raise HTTPException(status_code=400, detail="Mode must be 'structured' or 'custom'")
+    if request.mode == "structured":
+        if not request.entity_types.strip():
+            raise HTTPException(status_code=400, detail="Entity types are required for structured mode")
+        if not request.rules.strip():
+            raise HTTPException(status_code=400, detail="Rules are required for structured mode")
+    if request.mode == "custom" and not (request.custom_content or "").strip():
+        raise HTTPException(status_code=400, detail="Custom content is required for custom mode")
+    updated = prompt_config_service.update_config(
+        key=key,
+        name=request.name.strip(),
+        entity_types=request.entity_types.strip(),
+        rules=request.rules.strip(),
+        language=request.language,
+        examples_positive=request.examples_positive.strip() if request.examples_positive else None,
+        examples_negative=request.examples_negative.strip() if request.examples_negative else None,
+        mode=request.mode,
+        custom_content=request.custom_content.strip() if request.custom_content else None,
+    )
+    if updated is None:
+        raise HTTPException(status_code=404, detail=f"Prompt config '{key}' not found")
+    return updated
 
 
 @router.get("/prompt-configs/{key}/content")
