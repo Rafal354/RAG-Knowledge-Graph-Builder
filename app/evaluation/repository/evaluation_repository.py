@@ -41,6 +41,13 @@ class EvaluationRepository:
                     reference_relation_count=result.reference_relation_count,
                     judge_prompt_version=result.judge_prompt_version,
                     judge_prompt_text=result.judge_prompt_text,
+                    unique_entities=result.unique_entities,
+                    reference_unique_entities=result.reference_unique_entities,
+                    self_duplicate_relations=result.self_duplicate_relations,
+                    self_duplicate_rate=result.self_duplicate_rate,
+                    merge_new_candidate_count=result.merge_new_candidate_count,
+                    merge_dropped_count=result.merge_dropped_count,
+                    merge_drop_rate=result.merge_drop_rate,
                 )
                 session.add(entity)
                 session.flush()

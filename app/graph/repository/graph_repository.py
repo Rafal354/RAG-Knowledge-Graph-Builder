@@ -5,7 +5,7 @@ from sqlalchemy.orm import selectinload
 
 from app.config.database import SessionLocal
 from app.graph.model.graph import GraphDetails, GraphSummary
-from app.graph.model.graph_entity import GraphEntity, GraphRelationEntity
+from app.graph.model.graph_entity import GraphEntity, GraphMergeStatsEntity, GraphRelationEntity
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +98,30 @@ class GraphRepository:
 
             chain.reverse()
             return chain
+
+    def save_merge_stats(self, graph_id: int, existing_count: int, new_candidate_count: int, merged_count: int) -> None:
+        dropped_count = new_candidate_count - (merged_count - existing_count)
+        with SessionLocal() as session:
+            session.add(
+                GraphMergeStatsEntity(
+                    graph_id=graph_id,
+                    existing_count=existing_count,
+                    new_candidate_count=new_candidate_count,
+                    merged_count=merged_count,
+                    dropped_count=dropped_count,
+                )
+            )
+            session.commit()
+
+    def get_merge_stats_for_graphs(self, graph_ids: list[int]) -> list[GraphMergeStatsEntity]:
+        if not graph_ids:
+            return []
+        with SessionLocal() as session:
+            return (
+                session.query(GraphMergeStatsEntity)
+                .filter(GraphMergeStatsEntity.graph_id.in_(graph_ids))
+                .all()
+            )
 
     def get_all_graphs(self) -> list[GraphSummary]:
         with SessionLocal() as session:

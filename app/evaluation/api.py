@@ -54,6 +54,13 @@ class EvaluationSummary(BaseModel):
     matched_count: int | None = None
     reference_relation_count: int | None = None
     judge_prompt_version: int | None = None
+    unique_entities: int | None = None
+    reference_unique_entities: int | None = None
+    self_duplicate_relations: int | None = None
+    self_duplicate_rate: float | None = None
+    merge_new_candidate_count: int | None = None
+    merge_dropped_count: int | None = None
+    merge_drop_rate: float | None = None
 
 
 @router.get("/prompts")
@@ -102,6 +109,13 @@ def list_evaluations():
             matched_count=e.matched_count,
             reference_relation_count=e.reference_relation_count,
             judge_prompt_version=e.judge_prompt_version,
+            unique_entities=e.unique_entities,
+            reference_unique_entities=e.reference_unique_entities,
+            self_duplicate_relations=e.self_duplicate_relations,
+            self_duplicate_rate=e.self_duplicate_rate,
+            merge_new_candidate_count=e.merge_new_candidate_count,
+            merge_dropped_count=e.merge_dropped_count,
+            merge_drop_rate=e.merge_drop_rate,
         )
         for e in entities
     ]
@@ -140,6 +154,13 @@ def get_evaluation(evaluation_id: int):
         reference_relation_count=entity.reference_relation_count,
         judge_prompt_version=entity.judge_prompt_version,
         judge_prompt_text=entity.judge_prompt_text,
+        unique_entities=entity.unique_entities,
+        reference_unique_entities=entity.reference_unique_entities,
+        self_duplicate_relations=entity.self_duplicate_relations,
+        self_duplicate_rate=entity.self_duplicate_rate,
+        merge_new_candidate_count=entity.merge_new_candidate_count,
+        merge_dropped_count=entity.merge_dropped_count,
+        merge_drop_rate=entity.merge_drop_rate,
     )
 
 
@@ -211,10 +232,26 @@ async def evaluate(request: EvaluateRequest):
         if reference_graph is None:
             raise HTTPException(status_code=404, detail=f"Reference graph {request.reference_graph_id} not found")
     result = await asyncio.to_thread(
-        _evaluation_service.evaluate, graph, text, prompt_template, request.model, reference_graph
+        _evaluation_service.evaluate, graph, text, prompt_template, request.model, reference_graph,
+        request.use_article_chain,
     )
+    if request.use_article_chain:
+        merge_summary = await asyncio.to_thread(_resolve_merge_drop_rate, request.graph_id)
+        result = result.model_copy(update=merge_summary)
     await asyncio.to_thread(_evaluation_repository.save, result, prompt_key)
     return result
+
+
+def _resolve_merge_drop_rate(graph_id: int) -> dict:
+    chain = _graph_repository.get_incremental_chain(graph_id)
+    stats = _graph_repository.get_merge_stats_for_graphs([g.id for g in chain])
+    total_new = sum(s.new_candidate_count for s in stats)
+    total_dropped = sum(s.dropped_count for s in stats)
+    return dict(
+        merge_new_candidate_count=total_new,
+        merge_dropped_count=total_dropped,
+        merge_drop_rate=round(total_dropped / total_new, 3) if total_new else None,
+    )
 
 
 def _resolve_prompt_template_for_backfill(prompt_key: str) -> str | None:

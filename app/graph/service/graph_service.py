@@ -28,7 +28,14 @@ class GraphService:
             "Merged relations: existing=%d, new=%d, merged=%d",
             len(existing_relations), len(new_relations), len(merged_relations),
         )
-        return self.graph_repository.save_graph(merged_relations, title=title, model=model, article_id=article_id, prompt_key=prompt_key)
+        saved = self.graph_repository.save_graph(merged_relations, title=title, model=model, article_id=article_id, prompt_key=prompt_key)
+        self.graph_repository.save_merge_stats(
+            graph_id=saved.graph_id,
+            existing_count=len(existing_relations),
+            new_candidate_count=len(new_relations),
+            merged_count=len(merged_relations),
+        )
+        return saved
 
     def get_latest_graph_text(self) -> str:
         latest_graph = self.graph_repository.get_latest_graph()

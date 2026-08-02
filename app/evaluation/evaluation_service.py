@@ -85,6 +85,14 @@ class EvaluationResult(BaseModel):
     reference_relation_count: int | None = None
     judge_prompt_version: int | None = None
     judge_prompt_text: str | None = None
+    # scenariusz przyrostowy (4.7) - liczone tylko gdy include_chain_metrics=True
+    unique_entities: int | None = None
+    reference_unique_entities: int | None = None
+    self_duplicate_relations: int | None = None
+    self_duplicate_rate: float | None = None
+    merge_new_candidate_count: int | None = None
+    merge_dropped_count: int | None = None
+    merge_drop_rate: float | None = None
 
 
 def _compute_connectivity_score(graph) -> float:
@@ -220,6 +228,66 @@ def _compute_reference_metrics(graph, reference_graph) -> dict:
     )
 
 
+def _unique_entity_count(graph) -> int:
+    entities = set()
+    for r in graph.relations:
+        entities.add(_normalize_str(r.entity_1))
+        entities.add(_normalize_str(r.entity_2))
+    return len(entities)
+
+
+def _compute_self_duplication(graph, threshold: float = 0.75) -> dict:
+    """Wykrywa relacje semantycznie zdublowane, które przetrwały scalanie oparte
+    wyłącznie na normalizacji tekstowej (np. inna forma czasownika w relacji: "rozwija"
+    vs "rozwijał"). Porównuje TYLKO relacje między trójkami dzielącymi dokładnie tę
+    samą (znormalizowaną) parę encji - porównywanie całych trójek embeddingami
+    (jak w 4.3.2) zawyżałoby wynik, bo różne, prawdziwe fakty o tym samym podmiocie
+    (np. "X odpowiadał za Mac" i "X odpowiadał za iPad") mają bardzo podobną strukturę
+    zdania mimo że nie są duplikatami."""
+    triples = [_normalize_triple(r) for r in graph.relations]
+    n = len(triples)
+    if n < 2:
+        return dict(self_duplicate_relations=0, self_duplicate_rate=0.0)
+
+    from collections import defaultdict
+    import networkx as nx
+
+    groups: dict[tuple[str, str], list[int]] = defaultdict(list)
+    for i, (e1, _rel, e2) in enumerate(triples):
+        groups[(e1, e2)].append(i)
+
+    candidate_groups = {pair: idxs for pair, idxs in groups.items() if len(idxs) > 1}
+    if not candidate_groups:
+        return dict(self_duplicate_relations=0, self_duplicate_rate=0.0)
+
+    model = _get_embed_model()
+    excess = 0
+    for idxs in candidate_groups.values():
+        rels = [triples[i][1] for i in idxs]
+        emb = model.encode(rels, convert_to_numpy=True, show_progress_bar=False)
+        norm = emb / (np.linalg.norm(emb, axis=1, keepdims=True) + 1e-9)
+        sim_matrix = norm @ norm.T
+
+        G = nx.Graph()
+        G.add_nodes_from(range(len(idxs)))
+        for a in range(len(idxs)):
+            for b in range(a + 1, len(idxs)):
+                if sim_matrix[a, b] >= threshold:
+                    G.add_edge(a, b)
+
+        num_clusters = nx.number_connected_components(G)
+        excess += len(idxs) - num_clusters
+
+    logger.info(
+        "Self-duplication check for graph_id=%d: %d relations, %d candidate entity-pairs, %d excess (rate=%.3f)",
+        graph.id, n, len(candidate_groups), excess, excess / n,
+    )
+    return dict(
+        self_duplicate_relations=excess,
+        self_duplicate_rate=round(excess / n, 3),
+    )
+
+
 def build_judge_prompt(graph, text: str, prompt_template: str) -> str:
     graph_text = _graph_to_text(graph)
     return (
@@ -245,7 +313,7 @@ def build_judge_prompt(graph, text: str, prompt_template: str) -> str:
 class EvaluationService:
 
     def evaluate(self, graph, text: str, prompt_template: str, model: str = "claude-sonnet-4-6",
-                 reference_graph=None) -> EvaluationResult:
+                 reference_graph=None, include_chain_metrics: bool = False) -> EvaluationResult:
         from langchain.chat_models import init_chat_model
 
         prompt = build_judge_prompt(graph, text, prompt_template)
@@ -266,6 +334,13 @@ class EvaluationService:
         ref_metrics = _compute_reference_metrics(graph, reference_graph) if reference_graph is not None else {}
         connectivity_score = _compute_connectivity_score(graph)
 
+        chain_metrics = {}
+        if include_chain_metrics:
+            chain_metrics["unique_entities"] = _unique_entity_count(graph)
+            if reference_graph is not None:
+                chain_metrics["reference_unique_entities"] = _unique_entity_count(reference_graph)
+            chain_metrics.update(_compute_self_duplication(graph))
+
         return EvaluationResult(
             graph_id=graph.id,
             graph_relations=len(graph.relations),
@@ -283,4 +358,5 @@ class EvaluationService:
             judge_prompt_version=JUDGE_PROMPT_VERSION,
             judge_prompt_text=prompt,
             **ref_metrics,
+            **chain_metrics,
         )

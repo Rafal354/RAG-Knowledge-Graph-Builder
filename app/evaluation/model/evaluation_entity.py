@@ -32,6 +32,13 @@ class EvaluationEntity(Base):
     reference_relation_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     judge_prompt_version: Mapped[int | None] = mapped_column(Integer, nullable=True)
     judge_prompt_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    unique_entities: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    reference_unique_entities: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    self_duplicate_relations: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    self_duplicate_rate: Mapped[float | None] = mapped_column(Float, nullable=True)
+    merge_new_candidate_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    merge_dropped_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    merge_drop_rate: Mapped[float | None] = mapped_column(Float, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

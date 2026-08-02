@@ -29,6 +29,20 @@ class GraphEntity(Base):
     )
 
 
+class GraphMergeStatsEntity(Base):
+    """Statystyki scalania dla pojedynczego kroku scenariusza przyrostowego (4.7) -
+    ile trójek istniało, ile zaproponowano świeżo z izolowanej ekstrakcji, ile z nich
+    odrzucono jako dokładne duplikaty (po normalizacji) przy save_incremental_graph."""
+
+    __tablename__ = "graph_merge_stats"
+
+    graph_id: Mapped[int] = mapped_column(ForeignKey("graphs.id", ondelete="CASCADE"), primary_key=True)
+    existing_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    new_candidate_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    merged_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    dropped_count: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
 class GraphRelationEntity(Base):
     __tablename__ = "graph_relations"
 

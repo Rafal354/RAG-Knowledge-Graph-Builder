@@ -708,6 +708,26 @@ function buildEvalResultHtml(data) {
     <div style="display:flex;gap:12px;margin-bottom:16px;">${refCards.join("")}</div>`;
   })() : "";
 
+  const chainMetricsHtml = (data.unique_entities != null) ? (() => {
+    const chainCards = [
+      card("Uniq. ent.", `${data.unique_entities}`, "var(--text)"),
+    ];
+    if (data.reference_unique_entities != null) {
+      const diff = data.unique_entities - data.reference_unique_entities;
+      const diffLabel = diff > 0 ? `+${diff}` : `${diff}`;
+      chainCards.push(card("Ref. ent.", `${data.reference_unique_entities} (${diffLabel})`, diff === 0 ? "var(--success)" : "var(--warning)"));
+    }
+    if (data.self_duplicate_rate != null) {
+      chainCards.push(card("Self-dup.", `${data.self_duplicate_relations} (${pct(data.self_duplicate_rate)})`, rateColor(data.self_duplicate_rate)));
+    }
+    if (data.merge_drop_rate != null) {
+      chainCards.push(card("Merge drop", `${data.merge_dropped_count}/${data.merge_new_candidate_count} (${pct(data.merge_drop_rate)})`, "var(--text)"));
+    }
+    return `
+    <div style="margin-bottom:6px;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Incremental chain metrics</div>
+    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">${chainCards.join("")}</div>`;
+  })() : "";
+
   const verdictsHtml = data.triple_verdicts?.length ? `
     <div style="margin-bottom:14px;">
       <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Triples</div>
@@ -734,7 +754,7 @@ function buildEvalResultHtml(data) {
     <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Analysis</div>
     <div style="font-size:13px;white-space:pre-wrap;line-height:1.7;color:var(--text);">${data.analysis}</div>`;
 
-  return metricsHtml + refMetricsHtml + verdictsHtml + missingHtml + analysisHtml;
+  return metricsHtml + refMetricsHtml + chainMetricsHtml + verdictsHtml + missingHtml + analysisHtml;
 }
 
 async function loadEvalHistory() {
