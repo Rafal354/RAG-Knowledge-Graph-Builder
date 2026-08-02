@@ -53,13 +53,10 @@ class KnowledgeBaseService:
 
     def _update_from_article(self, title: str, text: str, model: str, article_id: int | None = None) -> None:
         try:
-            graph_text = self.graph_service.get_latest_graph_text()
-            if not graph_text or graph_text.strip() == "[RELATIONS]":
-                prompt_type = "new_graph"
-                prompt = self.prompt_service.build_prompt(prompt_type, title=title, text=text)
-            else:
-                prompt_type = "existing_graph"
-                prompt = self.prompt_service.build_prompt(prompt_type, title=title, text=text, graph=graph_text)
+            # Każdy artykuł jest ekstrahowany w izolacji (bez istniejącego grafu w kontekście) -
+            # scalanie z dotychczasowym grafem odbywa się programowo, patrz GraphService.save_incremental_graph.
+            prompt_type = "new_graph"
+            prompt = self.prompt_service.build_prompt(prompt_type, title=title, text=text)
             prompt_key = f"{self.prompt_service.prompt_set}/{prompt_type}"
 
             logger.info("Prompt:\n%s", prompt)
@@ -119,8 +116,8 @@ class KnowledgeBaseService:
 
             logger.info("Response: %s", response_to_return)
 
-            self.graph_service.save_graph(response_to_return, title=title, model=model, article_id=article_id,
-                                          prompt_key=prompt_key)
+            self.graph_service.save_incremental_graph(response_to_return, title=title, model=model, article_id=article_id,
+                                                       prompt_key=prompt_key)
             try:
                 self.neo4j_service.push_graph(self.graph_service.get_latest_graph())
             except Exception:

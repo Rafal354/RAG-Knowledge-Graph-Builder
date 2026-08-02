@@ -15,6 +15,21 @@ class GraphService:
         logger.info("Relations: %s", relations)
         return self.graph_repository.save_graph(relations, title=title, model=model, article_id=article_id, prompt_key=prompt_key)
 
+    def save_incremental_graph(self, llm_output: str, title: str | None = None, model: str | None = None, article_id: int | None = None, prompt_key: str | None = None) -> GraphDetails:
+        new_relations = self._parse_relations(llm_output)
+        existing_graph = self.graph_repository.get_latest_graph()
+        existing_relations = (
+            [(r.entity_1, r.relation, r.entity_2) for r in existing_graph.relations]
+            if existing_graph is not None
+            else []
+        )
+        merged_relations = self._merge_relations(existing_relations, new_relations)
+        logger.info(
+            "Merged relations: existing=%d, new=%d, merged=%d",
+            len(existing_relations), len(new_relations), len(merged_relations),
+        )
+        return self.graph_repository.save_graph(merged_relations, title=title, model=model, article_id=article_id, prompt_key=prompt_key)
+
     def get_latest_graph_text(self) -> str:
         latest_graph = self.graph_repository.get_latest_graph()
         return self.build_graph_text(latest_graph)
@@ -43,6 +58,29 @@ class GraphService:
             lines.append(f"{rel.entity_1} -> {rel.relation} -> {rel.entity_2}")
 
         return "\n".join(lines)
+
+    @staticmethod
+    def _normalize_triple(entity_1: str, relation: str, entity_2: str) -> tuple[str, str, str]:
+        def norm(value: str) -> str:
+            return " ".join(value.strip().lower().split())
+
+        return norm(entity_1), norm(relation), norm(entity_2)
+
+    @classmethod
+    def _merge_relations(
+        cls,
+        existing: list[tuple[str, str, str]],
+        new: list[tuple[str, str, str]],
+    ) -> list[tuple[str, str, str]]:
+        seen = {cls._normalize_triple(*relation) for relation in existing}
+        merged = list(existing)
+        for relation in new:
+            key = cls._normalize_triple(*relation)
+            if key in seen:
+                continue
+            seen.add(key)
+            merged.append(relation)
+        return merged
 
     @staticmethod
     def _parse_relations(llm_output: str) -> list[tuple[str, str, str]]:
