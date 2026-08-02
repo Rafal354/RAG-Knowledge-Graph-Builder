@@ -70,6 +70,35 @@ class GraphRepository:
                 .first()
             )
 
+    def get_incremental_chain(self, graph_id: int) -> list[GraphEntity]:
+        """Zwraca wersje grafu należące do tego samego łańcucha przyrostowego co graph_id,
+        w kolejności chronologicznej (od najstarszej do graph_id włącznie).
+
+        Łańcuch to ciąg kolejnych wersji nieprzerwany żadnym pustym grafem (np. po
+        clear_knowledge_base) - trafienie na pustą wersję cofając się od graph_id oznacza
+        koniec bieżącego łańcucha i początek poprzedniego."""
+        with SessionLocal() as session:
+            target = session.query(GraphEntity).filter(GraphEntity.id == graph_id).first()
+            if target is None:
+                return []
+
+            candidates = (
+                session.query(GraphEntity)
+                .options(selectinload(GraphEntity.relations))
+                .filter(GraphEntity.version <= target.version)
+                .order_by(GraphEntity.version.desc())
+                .all()
+            )
+
+            chain: list[GraphEntity] = []
+            for graph in candidates:
+                if len(graph.relations) == 0 and graph.id != target.id:
+                    break
+                chain.append(graph)
+
+            chain.reverse()
+            return chain
+
     def get_all_graphs(self) -> list[GraphSummary]:
         with SessionLocal() as session:
             graphs = (

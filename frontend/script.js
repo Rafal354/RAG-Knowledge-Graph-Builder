@@ -119,6 +119,7 @@ const modelSelectCustom = new CustomSelect(modelSelect);
 const evalGraphCustom = new CustomSelect(document.getElementById("eval-graph-a"));
 const evalRefGraphCustom = new CustomSelect(document.getElementById("eval-ref-graph"));
 const evalModelCustom = new CustomSelect(document.getElementById("eval-model"));
+const evalUseChainCheckbox = document.getElementById("eval-use-chain");
 const clearGraphBtn = document.getElementById("clear-graph-btn");
 const loadLatestBtn = document.getElementById("load-latest-btn");
 const manualToggleBtn = document.getElementById("manual-toggle-btn");
@@ -906,6 +907,7 @@ evalRunBtn.addEventListener("click", async () => {
   const evalModel = evalModelCustom.value;
   const refVal = evalRefGraphCustom.value;
   const referenceGraphId = refVal ? parseInt(refVal) : null;
+  const useArticleChain = evalUseChainCheckbox.checked;
 
   if (!graphId) { evalResults.innerHTML = "<div style='color:var(--error);font-size:13px;'>Select a graph.</div>"; return; }
 
@@ -917,7 +919,12 @@ evalRunBtn.addEventListener("click", async () => {
     const res = await fetch(`${API_BASE_URL}/evaluate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ graph_id: graphId, model: evalModel, reference_graph_id: referenceGraphId }),
+      body: JSON.stringify({
+        graph_id: graphId,
+        model: evalModel,
+        reference_graph_id: referenceGraphId,
+        use_article_chain: useArticleChain,
+      }),
     });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();

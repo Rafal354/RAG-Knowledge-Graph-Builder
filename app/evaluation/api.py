@@ -26,6 +26,9 @@ class EvaluateRequest(BaseModel):
     # fallback fields — used only when the graph has no linked article / prompt
     text: str | None = None
     prompt_key: str | None = None
+    # scenariusz przyrostowy (4.7): oceń graf względem konkatenacji tekstów WSZYSTKICH
+    # artykułów z jego łańcucha przyrostowego, zamiast tylko ostatniego, pojedynczego artykułu
+    use_article_chain: bool = False
 
 
 class EvaluationSummary(BaseModel):
@@ -146,6 +149,28 @@ def delete_evaluation(evaluation_id: int):
         raise HTTPException(status_code=404, detail=f"Evaluation {evaluation_id} not found")
 
 
+def _resolve_article_chain_text(graph_id: int) -> str:
+    chain = _graph_repository.get_incremental_chain(graph_id)
+    article_ids: list[int] = []
+    seen: set[int] = set()
+    for g in chain:
+        if g.article_id is not None and g.article_id not in seen:
+            seen.add(g.article_id)
+            article_ids.append(g.article_id)
+
+    if not article_ids:
+        raise HTTPException(status_code=400, detail="No articles found in the incremental chain for this graph.")
+
+    sections = []
+    for article_id in article_ids:
+        article = _article_repository.get_article(article_id)
+        if article is None:
+            raise HTTPException(status_code=404, detail=f"Linked article {article_id} not found.")
+        sections.append(f"[Artykuł: {article.title}]\n{article.text}")
+
+    return "\n\n---\n\n".join(sections)
+
+
 @router.post("/evaluate", response_model=EvaluationResult)
 async def evaluate(request: EvaluateRequest):
     graph = _graph_repository.get_graph(request.graph_id)
@@ -154,6 +179,8 @@ async def evaluate(request: EvaluateRequest):
 
     # resolve text
     text = request.text
+    if not text and request.use_article_chain:
+        text = await asyncio.to_thread(_resolve_article_chain_text, request.graph_id)
     if not text:
         if graph.article_id is None:
             raise HTTPException(status_code=400, detail="Graph has no linked article. Provide text manually.")

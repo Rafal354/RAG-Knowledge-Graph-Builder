@@ -243,6 +243,13 @@
           <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Judge model</label>
           <select id="eval-model" style="width:100%;"></select>
         </div>
+        <div style="flex:0 0 170px;">
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Scenario</label>
+          <label style="font-size:12px;display:flex;align-items:center;gap:6px;white-space:nowrap;height:30px;" title="Ocenia graf względem konkatenacji tekstów wszystkich artykułów z jego łańcucha przyrostowego (scenariusz iteracyjny), zamiast tylko ostatniego artykułu.">
+            <input type="checkbox" id="eval-use-chain">
+            Use article chain
+          </label>
+        </div>
         <div style="flex:0 0 auto;">
           <label style="font-size:11px;display:block;margin-bottom:4px;visibility:hidden">_</label>
           <button id="eval-run-btn" type="button" style="width:auto;">Run</button>
