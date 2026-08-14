@@ -79,3 +79,8 @@ database/*
 # Generated data exports
 # -------------------------
 /internal/exports/
+
+# -------------------------
+# Jupyter
+# -------------------------
+.ipynb_checkpoints/
