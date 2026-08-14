@@ -1,0 +1,13 @@
+Federalna Komisja Łączności (Federal Communications Commission; FCC) wydała zgodę na rozmieszczenie kolejnych 7,5 tys. satelitów Starlink drugiej generacji. Pozwoli to firmie SpaceX rozszerzyć konstelację do 15 tys. jednostek.
+
+Z przekazanych informacji wynika, że zgoda FCC obejmuje również możliwość modernizacji satelitów oraz prowadzenia operacji w pięciu zakresach częstotliwości. Regulator zdecydował się także na złagodzenie wcześniejszych ograniczeń dotyczących pokrycia sygnałem i pojemności sieci, co ma przełożyć się na wyraźnie wyższą jakość usług.
+
+Warto zauważyć, że nowe satelity mają umożliwić rozwój łączności direct-to-cell (Internet dostarczany bezpośrednio do telefonów komórkowych) poza terytorium USA oraz zapewnić dodatkowe pokrycie w samych Stanach Zjednoczonych. Według FCC zmodernizowana infrastruktura Starlinka pozwoli na świadczenie usług mobilnych nowej generacji, z dostępem do internetu o prędkościach sięgających 1 Gb/s.
+
+Zgoda od FCC nie jest jednak bezwarunkowa. SpaceX zostało zobowiązane do umieszczenia na orbicie i uruchomienia co najmniej 50 proc. zatwierdzonych satelitów do dnia 1 grudnia 2028 r. Pełne rozmieszczenie konstelacji ma zostać zakończone do grudnia 2031 r. Agencja Reutera opisała, że SpaceX ubiegało się o zgodę na rozmieszczenie prawie 30 000 satelitów, ale FCC póki co zatwierdziła jedynie 15 000.
+
+Starlink pozostaje obecnie największą aktywną konstelacją satelitarną na świecie. Sieć obsługuje blisko 9 mln użytkowników w przeszło 100 krajach. Usługi Starlinka są wykorzystywane zarówno w regionach o ograniczonej infrastrukturze telekomunikacyjnej, jak i w sytuacjach kryzysowych, czego jednym z najbardziej znanych przykładów jest wojna w Ukrainie.
+
+SpaceX utrzymuje tempo wynoszenia satelitów na poziomie kilkudziesięciu misji rocznie. Tylko w 2025 r. wyniesiono ponad 3000 nowych jednostek. Przyjęte standardy pozwalają na bieżąco wymieniać jednostki o niższej sprawności oraz wprowadzać modele o większej przepustowości i znacznie skuteczniejszym zarządzaniu widmem częstotliwości. Wyraźnie widać również trend przechodzenia na konstrukcje satelitów o masie ponad tony, przygotowane z myślą o przyszłych startach rakiety nośnej Starship.
+
+W dłuższej perspektywie działania SpaceX wykraczają poza tradycyjną rywalizację o rynek telekomunikacyjny. Firma zakłada, że architektura konstelacji może stać się podstawą komunikacji dla misji międzyplanetarnych oraz przyszłych kolonii pozaziemskich. Wizja ta wpisuje Starlink w szerszy projekt budowy infrastruktury zdolnej wspierać eksplorację Układu Słonecznego.

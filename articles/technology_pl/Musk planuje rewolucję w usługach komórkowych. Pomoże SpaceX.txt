@@ -1,0 +1,19 @@
+SpaceX złożył w amerykańskim urzędzie patentowym wniosek o znak towarowy „Starlink Mobile”, co sugeruje, że ma większe ambicje niż tylko bycie partnerem dla istniejących sieci. Możliwe, że są to przygotowania do wejścia w rolę globalnego operatora komórkowego. Elon Musk zresztą nie ukrywa, że jest to dla niego interesujący rynek.
+
+Wniosek o znak „Starlink Mobile” obejmuje szeroki zakres usług telekomunikacyjnych, w tym dostarczanie głosu, wideo i danych do telefonów i urządzeń smart oraz „cellular personal communication services”. Równolegle SpaceX zgłosił znak „Powered by Starlink” dla podobnego zakresu usług, co wskazuje na plany integracji satelitarnej technologii z urządzeniami IoT, takimi jak termostaty, kamery czy lodówki.
+
+Wskazuje to na ambitne plany wejścia na rynek usług komórkowych i chęć bezpośredniego konkurowania z gigantami takimi jak T-Mobile czy Verizon. Wniosek trafił do amerykańskiego Urzędu Patentowego 16 października 2025 roku, krótko po sugestiach Elona Muska o walce z tradycyjnymi operatorami i umowie z EchoStar za 17 miliardów dolarów na zakup pasma radiowego.
+
+Co więcej, firma planuje wystrzelić nawet 15 tys. kolejnych satelitów nowej generacji, a dokumenty regulacyjne przewidują wykorzystanie zarówno satelitów, jak i infrastruktury naziemnej do świadczenia usług komórkowych.
+
+Już dziś Starlink świadczy usługi komórkowej łączności satelitarnej poprzez partnerów, m.in. T-Mobile w USA, Rogers w Kanadzie i KDDI w Japonii. Usługa direct-to-cell zapewnia podstawową łączność wideo, dostęp do mediów społecznościowych i SMS-ów w obszarach bez wież komórkowych. Ukraina będzie pierwszym krajem w Europie, który skorzysta z tej technologii.
+
+W nagraniu podcastu All-in Podcast Elon Musk opowiada o „komórkowych planach”. Twierdzi, że Starlink nie zamierza wypierać konkurentów, ale uzupełniać ich ofertę, umożliwiając używanie telefonów LTE bez modyfikacji wszędzie, gdzie widać niebo.
+
+Mówiąc wprost, nie zamierzamy doprowadzić do bankructwa innych operatorów. Nadal będą istnieć, ponieważ posiadają duże zasoby pasma. Jednak tak, powinieneś móc korzystać z Starlinka tak, jak z AT&T, T-Mobile, Verizon czy czegokolwiek innego. Bylibyśmy kompleksowym rozwiązaniem zapewniającym wysoką przepustowość w domu i wysoką przepustowość dla połączeń bezpośrednich z siecią komórkową.
+
+AT&T i Verizon rozwijają własną satelitarną ofertę komórkową nie ze Starlinkiem, tylko we współpracy z AST SpaceMobile, które buduje konstelację dużych satelitów zdolnych bezpośrednio obsługiwać zwykłe smartfony w paśmie operatorów, czyli direct-to-cell, bez specjalnych telefonów satelitarnych.
+
+Apple z kolei od kilku generacji iPhone’ów korzysta z infrastruktury Globalstar do realizowania awaryjnych funkcji satelitarnych, takich jak SOS i zgłaszanie awarii w miejscach bez zasięgu sieci naziemnych. Rozwijanie tej technologii powstrzymuje brak własnych satelitów, a w tle pojawia się jeszcze inna kwestia.
+
+Otóż wykupieniem Globalstar zainteresowany jest SpaceX. Jeśli doszłoby do sprzedaży, Apple zyskałoby dostęp do najnowocześniejszego systemu Starlink i mogło zaproponować lepsze opcje łączności satelitarnej. Z drugiej strony firma byłaby mocno uzależniona od Elona Muska. A przeszłość pokazała, że jest to ryzyko polityczne, biznesowe i PR-owe.

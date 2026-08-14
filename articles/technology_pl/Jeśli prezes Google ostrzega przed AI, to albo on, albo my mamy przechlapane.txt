@@ -1,0 +1,21 @@
+Jeśli prezes Google ostrzega przed AI, to albo on, albo my mamy przechlapane
+
+Jeśli CEO giganta technologicznego ostrzega przed sztuczną inteligencją, to znaczy, że jego firma właśnie w tym wyścigu plasuje się z tyłu stawki. A gdy mowa o Google’u i jego prezesie Sundarze Pichaiu - sytuacja staje się szczególnie pikantna.
+
+Pichai, podobnie jak szefowie innych wielkich firm technologicznych, coraz częściej przemawia w tonie, który można określić jako odpowiedzialny niepokój. W rozmowach z 60 Minutes oraz innymi mediami podkreśla, że AI może wyrządzić wiele szkód, jeśli zostanie niewłaściwie wdrożone. Brzmi znajomo? Powinno - to standardowy repertuar każdego CEO, który widzi, jak konkurencja wyprzedza go w kluczowej technologii.
+
+Prawda jest taka, że Google, mimo swoich deklaracji o odpowiedzialnym rozwoju AI, znalazł się w defensywie. Firma, która jeszcze kilka lat temu była niekwestionowanym liderem w dziedzinie uczenia maszynowego, teraz musi gonić OpenAI, Microsoft i Anthropic. To szczególnie bolesne, gdy weźmiemy pod uwagę, że Google praktycznie wynalazł transformers - architekturę będącą podstawą wszystkich dzisiejszych dużych modeli językowych.
+
+Gdy gigant potyka się o własne wynalazki
+
+Ironia tej sytuacji jest wręcz poetycka. Google Research opublikował w 2017 r. przełomowy artykuł Attention Is All You Need, który stał się fundamentem dla ChatGPT i całej generacji modeli AI. Reakcja Google’a była... powiedzmy dyplomatycznie - chaotyczna. Firma pospiesznie wypuściła Barda, który początkowo sprawiał wrażenie niedopracowanego produktu w porównaniu z ChatGPT. Później przemianowała go na Gemini, ale pierwsze wrażenie wywiera się tylko raz. W międzyczasie Microsoft, partner OpenAI, zaczął integrować technologie AI z pakietem Office i wyszukiwarką Bing, bezpośrednio atakując główny biznes Google’a.
+
+W tym kontekście ostrzeżenia Pichaia przed zagrożeniami AI nabierają zupełnie innego charakteru. Gdy mówi o głębokich fake'ach czy potrzebie regulacji trudno oprzeć się wrażeniu, że jest to próba zwolnienia tempa wyścigu, w którym Google obecnie przegrywa. Google zainwestował szacunkowo 200 mld dol. w AI w ciągu ostatniej dekady, ale wciąż musi gonić konkurencję. Microsoft i OpenAI ogłosiły projekt Stargate o wartości 500 mld dol., a chiński DeepSeek pokazał, że można osiągnąć imponujące wyniki przy znacznie niższych kosztach.
+
+Innowacja, odpowiedzialność i ironia
+
+Pichai wielokrotnie podkreśla zaangażowanie Google’a w odpowiedzialny rozwój AI. Firma opublikowała w 2018 r. swoje AI Principles, będąc jedną z pierwszych, które określiły etyczne wytyczne dla rozwoju sztucznej inteligencji. W lutym bieżącego roku Google wydało już szósty coroczny raport na temat odpowiedzialnego rozwoju AI. Sceptycy jednak mogą zauważyć, że te deklaracje etyczne pojawiły się akurat w momencie, gdy Google przestał być niekwestionowanym liderem w dziedzinie AI.
+
+Rzeczywistość jest taka, że niezależnie od ostrzeżeń wyścig AI będzie się toczyć dalej. Stawka jest zbyt wysoka - mowa o technologii, która może przeprogramować całą gospodarkę światową. Google, Microsoft, OpenAI, Anthropic i dziesiątki innych firm będą nadal inwestować astronomiczne sumy w rozwój coraz potężniejszych systemów.
+
+W świecie technologii, gdzie innowacja jest królem, nawet ostrzeżenia przed własnym produktem mogą być formą marketingu. A gdy mowa o Google - firmie, która zdobyła dominację poprzez organizowanie światowych informacji - nikt nie powinien być zaskoczony, że próbuje teraz organizować narrację wokół swojej największej porażki w ostatnich latach.

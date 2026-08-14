@@ -1,0 +1,34 @@
+Sztuczna inteligencja w czasie wojny i pokoju. Eksperci o zagrożeniach
+Źródło: https://tech.wp.pl/sztuczna-inteligencja-w-czasie-wojny-i-pokoju-eksperci-o-zagrozeniach,7201889855031936a
+Autor: Amanda Grzmiel
+Data: 19 września 2025, 11:59
+
+Konferencja AI Summit 2025 w Polsko-Japońskiej Akademii Technik Komputerowych w Warszawie (17 września) zgromadziła naukowców, praktyków, twórców, artystów i przedstawicieli biznesu. Wydarzenie obejmowało sześć prelekcji i sześć paneli dyskusyjnych dotyczących sztucznej inteligencji w czterech obszarach: AI & Digital Art, Biznes & AI, Wdrożenia & AI oraz AI & Bezpieczeństwo.
+
+Dyskusja "Quo Vadis AI?"
+
+Najbardziej emocjonującą częścią konferencji była debata między prof. Andrzejem Draganem (fizyk, artysta) a Jackiem Dukajem (pisarz science-fiction). Moderatorem był Dariusz Rosiak. Rozmówcy debatowali nad definicją inteligencji - Dragan opowiadał się za wąskim rozumieniem jako rozpoznawania analogii i operacji na symbolach, zaś Dukaj prezentował szersze podejście obejmujące kreację.
+
+Kluczowym tematem była kwestia atrofii umiejętności ludzkich w wyniku zastępowania ich przez AI. Dukaj argumentował, że każde ułatwienie technologiczne prowadzi do utraty zdolności, szczególnie myślenia symbolicznego i abstrakcyjnego.
+
+Dragan kwestionował głębokość ludzkiego "rozumienia", sugerując, że nasze postrzeganie świata opiera się raczej na przyzwyczajeniu niż na faktycznym zrozumieniu.
+
+Eksperci dyskutowali również o osiągnięciu ogólnej sztucznej inteligencji (AGI) oraz o zjawiskach takich jak odwrócenie efektu Flynna i świadomość maszyn.
+
+AI a nowoczesna obrona państwa
+
+Panel ekspercki dotyczący bezpieczeństwa (prowadzony przez Dariusza Rosiaka) zebrał specjalistów z Polskiej Agencji Żeglugi Powietrznej, Microsoft, SII Polska, STM Cyber i Defense24. Dyskusja skupiła się na wykorzystaniu AI w systemach defensywnych i ofensywnych, analizie danych wywiadowczych, targetowaniu, logistyce i dowodzeniu.
+
+Eksperci podkreślili dwa odmienne podejścia do AI w wojsku:
+- Izrael: wieloletnia, systemowa transformacja cyfrowa wdrażana odgórnie od poziomu strategicznego po taktyczny
+- Ukraina: innowacja oddolna, tworzona na froncie przez małe zespoły deweloperów, reagująca na bezpośrednie potrzeby pola walki
+
+Zagrożenia cybernetyczne
+
+Omówiono także nowe zagrożenia, w tym "prompt injection" - rodzaj złośliwego oprogramowania, które komunikuje się z modelami AI i adaptuje się w czasie rzeczywistym, utrudniając detekcję.
+
+Ewelina Kozłowska, szefowa bezpieczeństwa informacji Polskiej Agencji Żeglugi Powietrznej, wskazała, że tego typu zagrożenia ciągle rosną.
+
+Wnioski
+
+Eksperci zgodzili się, że sztuczna inteligencja jest narzędziem o podwójnym zastosowaniu, redefiniującym obronność głębiej niż popularne wyobrażenia sugerują. AI jest obecna na każdym szczeblu współczesnego konfliktu, co prowadzi do niekończącego się wyścigu technologicznego. Pozostaje pytanie, czy doktryny, prawo i etyka zdołają nadążyć za tempem zmian.

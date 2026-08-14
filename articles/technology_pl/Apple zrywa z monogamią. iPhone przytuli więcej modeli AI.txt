@@ -1,0 +1,19 @@
+Apple otwiera system na konkurencję. Tim Cook zapowiada, że iPhone przygarnie więcej modeli AI, a ChatGPT nie będzie już jedynym dostawcą podsumowań powiadomień.
+
+Apple Intelligence otwiera się na więcej dostawców AI. W tle rekordowych wyników finansowych Apple zapowiada kolejne otwarcie na konkurencyjne modele AI. Tim Cook potwierdził, że ChatGPT nie będzie jedynym partnerem Apple Intelligence - Apple pracuje nad wprowadzeniem modeli od konkurencyjnych firm, w tym Google'a.
+
+Tim Cook mówi głośno o planach Apple'a. Więcej modeli AI w jednym iPhonie
+
+Podczas telekonferencji dotyczącej wyników finansowych za czwarty kwartał, szef Apple zdradził, że firma zamierza integrować systemy operacyjne z większą liczbą dostawców rozwiązań sztucznej inteligencji.
+
+Naszą intencją jest współpraca z większą liczbą partnerów w przyszłości.
+
+Już teraz wiadomo, że Apple prowadzi zaawansowane rozmowy z Google w sprawie integracji modelu Gemini. W tle słychać również plotki o zbliżeniu z Anthropic i Perplexity. O tych kierunkach mówił zresztą jeszcze w zeszłym roku Craig Federighi, wiceprezes Apple ds. oprogramowania, zaznaczając, że firma „planuje integracje z różnymi modelami, jak np. Google Gemini”.
+
+Na razie jednak jedynym oficjalnym partnerem Apple Intelligence pozostaje OpenAI, którego modele odpowiadają za generowanie różnych treści i działanie funkcji. Cook nie zdradził konkretnych terminów ani nazw kolejnych partnerów, ale zapewnił, że prace nad nową generacją Siri idą zgodnie z planem, a Apple nie wyklucza przejęć firm z sektora AI. Jesteśmy otwarci na fuzje i przejęcia, jeśli pomogą nam zrealizować naszą mapę rozwoju - zaznaczył dyrektor generalny Apple'a.
+
+Za kulisami firma przygotowuje wsparcie dla protokołu MCP (Model Context Protocol) - otwartego standardu stworzonego przez Anthropic, który pozwala na współdziałanie różnych modeli AI w ramach jednej platformy. Apple rozbudowuje też narzędzia takie jak Image Playground, gdzie już dziś można korzystać z modeli innych niż te od OpenAI.
+
+Deklaracja Cooka wpisuje się w szerszą strategię Apple'a, która ma za zadanie nadrobić zaległości w wyścigu o AI. Firma była dotąd krytykowana za powolne tempo wdrażania funkcji opartych o duże modele językowe, a także borykała się z problemem odejść kluczowych pracowników do firm takich jak Meta, OpenAI czy Anthropic.
+
+Choć Apple od lat rozwija własne rozwiązania oparte na uczeniu maszynowym - od wykrywania wypadków po tłumaczenia w AirPodsach - presja rynku skłania go do outsourcowania rozwiązań AI, by nadgonić konkurencję. Współpraca z zewnętrznymi dostawcami technologii ma być odpowiedzią na oczekiwania użytkowników, którzy przyzwyczaili się do rozmownych, kontekstowych asystentów.
