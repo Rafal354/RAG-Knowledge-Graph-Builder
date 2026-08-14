@@ -1,0 +1,15 @@
+konferencja_pl/new_graph,,995,297,6_ai_summit_pjait_2025_podsumowanie_konferencji_czesc_pierwsza,claude-opus-4-6,0.987,0.951,2 | 157,8 | 163,,,,,0.925,106,,,10,0.064,158,1,0.006
+konferencja_pl/new_graph,995,1005,298,6_ai_summit_pjait_2025_podsumowanie_konferencji_czesc_pierwsza,google/gemma-4-26b-a4b-it,0.991,0.917,1 | 112,10 | 121,0.973,0.694,3 | 112,48 | 157,0.886,88,106,-18,1,0.009,117,5,0.043
+konferencja_pl/new_graph,995,1015,299,6_ai_summit_pjait_2025_podsumowanie_konferencji_czesc_pierwsza,google/gemma-4-31b-it,0.877,0.877,14 | 114,14 | 114,0.965,0.701,4 | 114,47 | 157,0.976,84,106,-22,6,0.053,118,4,0.034
+konferencja_pl/new_graph,995,1035,302,6_ai_summit_pjait_2025_podsumowanie_konferencji_czesc_pierwsza,mistralai/mistral-small-3.2-24b-instruct,0.859,0.915,23 | 163,13 | 153,0.748,0.777,41 | 163,35 | 157,0.819,142,106,36,3,0.018,166,3,0.018
+konferencja_pl/new_graph,995,1025,300,6_ai_summit_pjait_2025_podsumowanie_konferencji_czesc_pierwsza,qwen3-32b,0.814,0.906,33 | 177,15 | 159,0.678,0.764,57 | 177,37 | 157,0.855,138,106,32,7,0.04,181,4,0.022
+sport_pl/new_graph,,1045,303,8_skrot_finalu_wimbledonu_2025_amanda_anisimova_iga_swiatek,claude-opus-4-6,0.769,0.806,15 | 65,12 | 62,,,,,0.735,49,,,2,0.031,95,30,0.316
+sport_pl/new_graph,1045,1055,305,8_skrot_finalu_wimbledonu_2025_amanda_anisimova_iga_swiatek,google/gemma-4-26b-a4b-it,0.857,0.808,7 | 49,10 | 52,0.898,0.677,5 | 49,21 | 65,0.75,40,49,-9,2,0.041,64,15,0.234
+sport_pl/new_graph,1045,1065,306,8_skrot_finalu_wimbledonu_2025_amanda_anisimova_iga_swiatek,google/gemma-4-31b-it,0.736,0.765,14 | 53,12 | 51,0.887,0.723,6 | 53,18 | 65,0.853,34,49,-15,1,0.019,77,24,0.312
+sport_pl/new_graph,1045,1085,308,8_skrot_finalu_wimbledonu_2025_amanda_anisimova_iga_swiatek,mistralai/mistral-small-3.2-24b-instruct,0.531,0.768,38 | 81,13 | 56,0.679,0.846,26 | 81,10 | 65,0.915,59,49,10,6,0.074,99,18,0.182
+sport_pl/new_graph,1045,1075,307,8_skrot_finalu_wimbledonu_2025_amanda_anisimova_iga_swiatek,qwen3-32b,0.7,0.889,24 | 80,7 | 63,0.6,0.738,32 | 80,17 | 65,0.875,63,49,14,6,0.075,101,21,0.208
+technology/new_graph,925,935,292,Tim Cook rezygnuje z Apple,claude-opus-4-6,0.958,0.94,7 | 165,10 | 168,0.927,0.944,12 | 165,9 | 162,0.939,115,111,4,7,0.042,169,4,0.024
+technology/new_graph,935,945,293,Tim Cook rezygnuje z Apple,google/gemma-4-26b-a4b-it,0.916,0.909,11 | 131,12 | 132,0.809,0.642,25 | 131,59 | 165,0.947,95,115,-20,8,0.061,135,4,0.03
+technology/new_graph,935,955,294,Tim Cook rezygnuje z Apple,google/gemma-4-31b-it,0.931,0.871,8 | 116,16 | 124,0.828,0.582,20 | 116,69 | 165,0.927,82,115,-33,8,0.069,122,6,0.049
+technology/new_graph,935,975,296,Tim Cook rezygnuje z Apple,mistralai/mistral-small-3.2-24b-instruct,0.875,0.927,20 | 160,11 | 151,0.719,0.697,45 | 160,50 | 165,0.952,126,115,11,7,0.044,188,28,0.149
+technology/new_graph,935,965,295,Tim Cook rezygnuje z Apple,qwen3-32b,0.918,0.866,11 | 134,19 | 142,0.739,0.6,35 | 134,66 | 165,0.941,101,115,-14,4,0.03,136,2,0.015

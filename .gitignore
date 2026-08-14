@@ -78,4 +78,4 @@ database/*
 # -------------------------
 # Generated data exports
 # -------------------------
-/exports/
+/internal/exports/
